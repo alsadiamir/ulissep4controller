@@ -7,6 +7,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/p4lang/p4runtime v1.3.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.7.0
 	google.golang.org/genproto v0.0.0-20211222154725-9823f7ba7562
-	google.golang.org/grpc v1.43.0 // indirect
+	google.golang.org/grpc v1.43.0
 )
