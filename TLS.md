@@ -1,5 +1,16 @@
 # TODO for implementing TLS
 
+## TLS Server in P4
+
+```cpp
+    grpc::experimental::IdentityKeyCertPair keyPair = {"cert.pem", "key.pem"};
+    auto certProvider = grpc::experimental::StaticDataCertificateProvider(keyPair);
+    auto tlsOptions = grpc::experimental::TlsServerCredentialsOptions(certProvider);
+    auto serverCredentials = grpc::experimental::TlsServerCredentials(tlsOptions);
+    // auto serverCredentials = grpc::InsecureServerCredentials();
+    builder.AddListeningPort(dp_grpc_server_addr, serverCredentials, &dp_grpc_server_port);
+```
+
 ### Resources
 
 - [C++ ALTS](https://grpc.io/docs/languages/cpp/alts)
