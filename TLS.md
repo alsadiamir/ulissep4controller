@@ -1,20 +1,37 @@
-# TODO for implementing TLS
+# TLS Support
 
-## TLS Server in P4
+## Build step
 
-```cpp
-    grpc::experimental::IdentityKeyCertPair keyPair = {"cert.pem", "key.pem"};
-    auto certProvider = grpc::experimental::StaticDataCertificateProvider(keyPair);
-    auto tlsOptions = grpc::experimental::TlsServerCredentialsOptions(certProvider);
-    auto serverCredentials = grpc::experimental::TlsServerCredentials(tlsOptions);
-    // auto serverCredentials = grpc::InsecureServerCredentials();
-    builder.AddListeningPort(dp_grpc_server_addr, serverCredentials, &dp_grpc_server_port);
-```
+Compile from source PI/bmv2
 
-### Resources
+1.  Follow instructions in the [PI README](https://github.com/p4lang/PI#dependencies)
+1.  Configure, build and install PI:
+    ```
+    git apply ulissep4controller/PI.patch
+    ./autogen.sh
+    ./configure --with-proto --without-internal-rpc --without-cli --without-bmv2 [--with-sysrepo]
+    make -j$(nproc)
+    sudo make install && sudo ldconfig
+    ```
+1.  Configure and build the bmv2 code; from the root of the repository:
+    ```
+    ./autogen.sh
+    ./configure --with-pi --without-thrift --without-nanomsg
+    make -j$(nproc)
+    sudo make install && sudo ldconfig
+    ```
+1.  Configure and build the simple_switch_grpc code; from this directory:
+    ```
+    ./autogen.sh
+    ./configure
+    make -j$(nproc)
+    sudo make install
+    ```
 
-- [C++ ALTS](https://grpc.io/docs/languages/cpp/alts)
-- [GO ALTS](https://grpc.io/docs/languages/go/alts/)
-- [simple_switch_grpc server](https://github.com/p4lang/behavioral-model/blob/182810a20e6293ae72c06699f74106321b5cd83a/targets/simple_switch_grpc/switch_runner.cpp#L523)
-- [main.go controller](https://github.com/alsadiamir/ulissep4controller/blob/622fe73325ae810757cd11b7e80f583480b31e8a/controller/main.go#L332)
-- [C++ stack overflow](https://stackoverflow.com/questions/32792284/grpc-in-cpp-providing-tls-support)
+### Process
+
+- find where the grpc server is instantiate
+- check for support for ssl in the cpp server
+- [configure pi_server.cpp to support ssl](https://github.com/alsadiamir/ulissep4controller/blob/main/PI.patch)
+- [configure client for using tls](https://github.com/alsadiamir/ulissep4controller/commit/5e9b422e85be565971019b4c34b6c20b0c95c4b5)
+- [created cert.go to generate certificates](https://github.com/alsadiamir/ulissep4controller/blob/main/cert/cert.go)
