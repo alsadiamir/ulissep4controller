@@ -1,0 +1,49 @@
+diff --git a/proto/server/pi_server.cpp b/proto/server/pi_server.cpp
+index 24968c3..a803d6a 100644
+--- a/proto/server/pi_server.cpp
++++ b/proto/server/pi_server.cpp
+@@ -28,6 +28,7 @@
+ #include <string>
+ #include <thread>
+ #include <unordered_map>
++#include <fstream>
+ 
+ #include "gnmi.h"
+ #include "gnmi/gnmi.grpc.pb.h"
+@@ -49,7 +50,7 @@ using grpc::ServerWriter;
+ using grpc::ServerReaderWriter;
+ using grpc::Status;
+ using grpc::StatusCode;
+-
++using std::string;
+ using pi::fe::proto::DeviceMgr;
+ 
+ namespace p4v1 = ::p4::v1;
+@@ -631,12 +632,26 @@ void PIGrpcServerInitWithConfig(const char *config_text, const char *version) {
+   assert(status.code() == ::google::rpc::Code::OK);
+ }
+ 
++string readFile(const string &fileName) {
++  std::ifstream f(fileName.c_str());
++  return string(std::istreambuf_iterator<char>(f),
++                std::istreambuf_iterator<char>());
++}
++
+ void PIGrpcServerRunAddrGnmi(const char *server_address, void *gnmi_service) {
+   server_data = new ::pi::server::ServerData();
+   server_data->server_address = std::string(server_address);
+   auto &builder = server_data->builder;
++  auto credentialOptions = grpc::SslServerCredentialsOptions();
++  grpc::SslServerCredentialsOptions::PemKeyCertPair keyPair;
++  keyPair.cert_chain = readFile("/tmp/cert.pem");
++  keyPair.private_key = readFile("/tmp/key.pem");
++  credentialOptions.pem_key_cert_pairs.push_back(keyPair);
++  credentialOptions.pem_root_certs = "";
++  std::shared_ptr<grpc::ServerCredentials> serverCredentials =
++      grpc::SslServerCredentials(credentialOptions);
+   builder.AddListeningPort(
+-    server_data->server_address, grpc::InsecureServerCredentials(),
++    server_data->server_address, serverCredentials,
+     &server_data->server_port);
+   builder.RegisterService(&server_data->pi_service);
+   if (gnmi_service != nullptr) {

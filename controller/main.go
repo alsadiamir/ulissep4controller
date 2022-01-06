@@ -14,6 +14,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 
@@ -329,7 +330,9 @@ func main() {
 	}
 
 	log.Infof("Connecting to server at %s", addr)
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	creds, _ := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+	// conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Cannot connect to server: %v", err)
 	}
