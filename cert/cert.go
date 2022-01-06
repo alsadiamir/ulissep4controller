@@ -148,14 +148,7 @@ func main() {
 		}
 	}
 
-	fmt.Println()
-
-	fmt.Println("How long should the certificate be valid for? A year (365")
-	fmt.Println("days) is usual but requires the certificate to be regenerated")
-	fmt.Println("within a year or the certificate will cease working.")
-	fmt.Println()
-
-	template.NotAfter = template.NotBefore.Add(time.Duration(readNumber("Number of days")) * time.Hour * 24)
+	template.NotAfter = template.NotBefore.Add(time.Duration(365) * time.Hour * 24)
 
 	fmt.Println("Common name:", template.Subject.CommonName)
 	fmt.Println("DNS SANs:")
