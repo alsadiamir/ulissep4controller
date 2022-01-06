@@ -34,9 +34,9 @@ class SingleSwitchTopo(Topo):
         # Initialize topology and default options
         Topo.__init__(self, **opts)
         s1 = self.addSwitch('s1', sw_path=sw_path, json_path=json_path, grpc_port=50051,
-                            device_id=1, cpu_port='255', thrift_port=9090)
+                            device_id=1, cpu_port='255')
         s2 = self.addSwitch('s2', sw_path=sw_path, json_path=json_path, grpc_port=50052,
-                            device_id=2, cpu_port='255', thrift_port=9091)
+                            device_id=2, cpu_port='255')
 
         self.addLink(s1, s2, delay=delay)
 
@@ -53,8 +53,8 @@ def main():
     num_hosts = int(args.num_hosts)
     sourceFileName = p4_file = args.p4_file.split('.')[0]
 
-    result = os.system("p4c --target bmv2 --arch v1model --p4runtime-files p4files/" +
-                       sourceFileName+".p4info.txt -o p4files " + args.p4_file)
+    # result = os.system("p4c --target bmv2 --arch v1model --p4runtime-files p4files/" +
+    #                    sourceFileName+".p4info.txt -o p4files " + args.p4_file)
     p4_file = args.p4_file.split('/')[-1]
     json_file = "p4files/"+p4_file.split('.')[0] + ".json"
 
@@ -70,9 +70,9 @@ def main():
                   link=TCLink)
     net.start()
 
-    if result != 0:
-        print("Error while compiling!")
-        sys.exit()
+    # if result != 0:
+    #     print("Error while compiling!")
+    #     sys.exit()
 
     switch_running = "simple_switch_grpc" in (p.name() for p in psutil.process_iter())
     if switch_running == False:
