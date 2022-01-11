@@ -63,14 +63,12 @@ class P4Host(Host):
 class P4GrpcSwitch(Switch):
     "BMv2 switch with gRPC support"
     next_grpc_port = 50051
-    next_thrift_port = 9090
 
-    def __init__(self, name, sw_path=None, json_path=None,
+    def __init__(self, name, device_id, sw_path=None, json_path=None,
                  grpc_port=None,
                  pcap_dump=False,
                  log_console=False,
                  verbose=False,
-                 device_id=None,
                  enable_debugger=False,
                  log_file=None,
                  **kwargs):
@@ -102,14 +100,12 @@ class P4GrpcSwitch(Switch):
         self.pcap_dump = pcap_dump
         self.enable_debugger = enable_debugger
         self.log_console = log_console
-        self.log_file = log_file
 
-        if device_id is not None:
-            self.device_id = device_id
-            P4GrpcSwitch.device_id = max(P4GrpcSwitch.device_id, device_id)
+        if log_file is not None:
+            self.log_file = log_file
         else:
-            self.device_id = P4GrpcSwitch.device_id
-            P4GrpcSwitch.device_id += 1
+            self.log_file = "log/%s.log" % self.name
+        self.device_id = device_id
 
     def check_switch_started(self, pid):
         for _ in range(SWITCH_START_TIMEOUT * 2):
@@ -131,7 +127,6 @@ class P4GrpcSwitch(Switch):
         if self.pcap_dump:
             args.append("--pcap %s" % self.pcap_dump)
         args.extend(['--device-id', str(self.device_id)])
-        P4GrpcSwitch.device_id += 1
         if self.json_path:
             args.append(self.json_path)
         else:
@@ -141,11 +136,9 @@ class P4GrpcSwitch(Switch):
         if self.log_console:
             args.append("--log-console")
         else:
-            args.append("--log-flush --log-level trace")
-        if self.log_file:
             args.append("--log-file %s" % self.log_file)
-        else:
-            args.append("--log-file log/%s.log" % self.name)
+        args.append("--log-flush --log-level trace")
+
         if self.grpc_port:
             args.append("-- --grpc-server-addr 0.0.0.0:" + str(self.grpc_port))
         cmd = ' '.join(args)
