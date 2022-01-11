@@ -50,6 +50,7 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 	for message := range messageCh {
 		switch m := message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:
+			log.Debug("Recived packet in")
 			for _, metadata := range m.Packet.GetMetadata() {
 				if metadata.GetMetadataId() == 1 {
 					destAddr := net.HardwareAddr(metadata.GetValue())

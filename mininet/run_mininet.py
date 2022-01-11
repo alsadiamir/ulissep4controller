@@ -12,7 +12,6 @@ from p4_mininet import P4GrpcSwitch, P4Host
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--p4-file', help='Path to P4 file', type=str, action="store", required=False)
-parser.add_argument('--delay', help='s1-s2 delay for OWD testing', type=str, action="store", required=False)
 
 
 class BaseTopo(Topo):
