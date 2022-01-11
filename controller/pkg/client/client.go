@@ -183,7 +183,7 @@ func (c *Client) ReadEntityWildcard(entity *p4_v1.Entity, readEntityCh chan<- *p
 	return nil
 }
 
-func (p4RtC *Client) SendPacketOut(pkt []byte, port []byte) error {
+func (p4RtC *Client) SendPacketOut(payload []byte, metadata []*p4_v1.PacketMetadata) error {
 	/*
 		md := &p4_v1.PacketMetadata{
 			MetadataId: 1,
@@ -193,17 +193,10 @@ func (p4RtC *Client) SendPacketOut(pkt []byte, port []byte) error {
 
 	m := &p4_v1.StreamMessageRequest{
 		Update: &p4_v1.StreamMessageRequest_Packet{Packet: &p4_v1.PacketOut{
-			Payload: pkt,
-			Metadata: []*p4_v1.PacketMetadata{
-				{
-					MetadataId: 1,
-					Value:      port,
-				},
-			},
+			Payload:  payload,
+			Metadata: metadata,
 		}},
 	}
-
-	fmt.Printf("PacketOUT = %s\n", m)
 
 	p4RtC.streamSendCh <- m
 	return nil

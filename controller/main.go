@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 
 	"controller/pkg/client"
+	"controller/pkg/util/conversion"
 
 	"github.com/antoninbas/p4runtime-go-client/pkg/signals"
 )
@@ -52,94 +54,28 @@ func cleanup(p4RtC *client.Client) error {
 	return nil
 }
 
-func learnMacs(p4RtC *client.Client, digestList *p4_v1.DigestList) error {
-	for _, digestData := range digestList.Data {
-		s := digestData.GetStruct()
-		srcAddr := s.Members[0].GetBitstring()
-		ingressPort := s.Members[1].GetBitstring()
-		log.WithFields(log.Fields{
-			"srcAddr":     srcAddr,
-			"ingressPort": ingressPort,
-		}).Debugf("Learning MAC")
-
-		smacOptions := &client.TableEntryOptions{
-			IdleTimeout: macTimeout,
-		}
-
-		smacEntry := p4RtC.NewTableEntry(
-			"IngressImpl.smac",
-			[]client.MatchInterface{&client.ExactMatch{
-				Value: srcAddr,
-			}},
-			p4RtC.NewTableActionDirect("NoAction", nil),
-			smacOptions,
-		)
-		if err := p4RtC.InsertTableEntry(smacEntry); err != nil {
-			log.Errorf("Cannot insert entry in 'smac': %v", err)
-		}
-
-		dmacEntry := p4RtC.NewTableEntry(
-			"IngressImpl.dmac",
-			[]client.MatchInterface{&client.ExactMatch{
-				Value: srcAddr,
-			}},
-			p4RtC.NewTableActionDirect("IngressImpl.fwd", [][]byte{ingressPort}),
-			nil,
-		)
-		if err := p4RtC.InsertTableEntry(dmacEntry); err != nil {
-			log.Errorf("Cannot insert entry in 'dmac': %v", err)
-		}
-	}
-
-	if err := p4RtC.AckDigestList(digestList); err != nil {
-		return fmt.Errorf("error when acking digest list: %v", err)
-	}
-
-	return nil
-}
-
-// forget mac entries
-func forgetEntries(p4RtC *client.Client, notification *p4_v1.IdleTimeoutNotification) {
-	for _, entry := range notification.TableEntry {
-		srcAddr := entry.Match[0].GetExact().Value
-		log.WithFields(log.Fields{
-			"srcAddr": srcAddr,
-		}).Debugf("Expiring MAC")
-
-		// first delete from the dmac table, then enable learning again for that MAC by
-		// deleting from the smac table.
-
-		dmacEntry := p4RtC.NewTableEntry(
-			"IngressImpl.dmac",
-			[]client.MatchInterface{&client.ExactMatch{
-				Value: srcAddr,
-			}},
-			nil,
-			nil,
-		)
-		if err := p4RtC.DeleteTableEntry(dmacEntry); err != nil {
-			log.Errorf("Cannot delete entry from 'dmac': %v", err)
-		}
-
-		if err := p4RtC.DeleteTableEntry(entry); err != nil {
-			log.Errorf("Cannot delete entry from 'smac': %v", err)
-		}
-	}
-}
-
 func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMessageResponse) {
 	for message := range messageCh {
 		switch m := message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:
-			log.Debugf("Received PacketIn")
+			for _, metadata := range m.Packet.GetMetadata() {
+				if metadata.GetMetadataId() == 1 {
+					destAddr := net.HardwareAddr(metadata.GetValue())
+					log.Debugf("Recived packet in: destAddr %d", destAddr)
+					outPort, _ := conversion.UInt32ToBinaryCompressed(2)
+					outMetadata := []*p4_v1.PacketMetadata{
+						{
+							MetadataId: 1,
+							Value:      outPort,
+						},
+					}
+					p4RtC.SendPacketOut(m.Packet.Payload, outMetadata)
+				}
+			}
 		case *p4_v1.StreamMessageResponse_Digest:
 			log.Debugf("Received DigestList")
-			if err := learnMacs(p4RtC, m.Digest); err != nil {
-				log.Errorf("Error when learning MACs: %v", err)
-			}
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			log.Debugf("Received IdleTimeoutNotification")
-			forgetEntries(p4RtC, m.IdleTimeoutNotification)
 		case *p4_v1.StreamMessageResponse_Error:
 			log.Errorf("Received StreamError")
 		default:
@@ -243,11 +179,6 @@ func main() {
 	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
 		log.Fatalf("Error when setting forwarding pipe: %v", err)
 	}
-
-	// log.Info("Setting device defaults")
-	// if err := initialize(p4RtC, deviceID); err != nil {
-	// 	log.Fatalf("Error when initializing defaults: %v", err)
-	// }
 
 	// start handling packet i/o
 	go handleStreamMessages(p4RtC, messageCh)

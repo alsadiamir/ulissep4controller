@@ -29,18 +29,17 @@ def get_all_virtual_interfaces():
 class SingleSwitchTopo(Topo):
     "Single switch connected to n (< 256) hosts."
 
-    def __init__(self, sw_path, json_path, delay, **opts):
+    def __init__(self, sw_path, json_path, **opts):
         # Initialize topology and default options
         Topo.__init__(self, **opts)
         s1 = self.addSwitch('s1', sw_path=sw_path, json_path=json_path, grpc_port=50051,
                             device_id=1, cpu_port='255')
         s2 = self.addSwitch('s2', sw_path=sw_path, json_path=json_path, grpc_port=50052,
                             device_id=2, cpu_port='255')
-        server = self.addHost('ser', ip="10.10.3.3/16", mac='00:00:01:01:01:01')
+        server = self.addHost('server', ip="10.10.3.3/16", mac='00:00:01:01:01:01')
 
-        self.addLink(s1, s2, delay=delay)
-        self.addLink(s2, server)
-        self.addLink(s1, server)
+        self.addLink(s1, s2, port1=1, port2=1)
+        self.addLink(s1, server, port1=2, port2=1)
 
 
 def main():
@@ -55,9 +54,7 @@ def main():
         print("Error while compiling!")
         sys.exit()
 
-    topo = SingleSwitchTopo("simple_switch_grpc",
-                            p4json,
-                            args.delay)
+    topo = SingleSwitchTopo("simple_switch_grpc", p4json)
 
     net = Mininet(topo=topo,
                   host=P4Host,
