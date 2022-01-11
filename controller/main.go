@@ -46,14 +46,6 @@ func portsToSlice(ports string) ([]uint32, error) {
 	return res, nil
 }
 
-func cleanup(p4RtC *client.Client) error {
-	// necessary because of https://github.com/p4lang/behavioral-model/issues/891
-	if err := p4RtC.DeleteMulticastGroup(mgrp); err != nil {
-		return fmt.Errorf("cannot delete multicast group %d: %v", mgrp, err)
-	}
-	return nil
-}
-
 func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMessageResponse) {
 	for message := range messageCh {
 		switch m := message.Update.(type) {
@@ -182,12 +174,6 @@ func main() {
 
 	// start handling packet i/o
 	go handleStreamMessages(p4RtC, messageCh)
-
-	defer func() {
-		if err := cleanup(p4RtC); err != nil {
-			log.Errorf("Error during cleanup: %v", err)
-		}
-	}()
 
 	log.Info("Do Ctrl-C to quit")
 	<-stopCh

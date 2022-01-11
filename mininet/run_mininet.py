@@ -1,7 +1,5 @@
 
-from lib.p4_mininet import P4Host, P4GrpcSwitch
 import psutil
-import subprocess
 import argparse
 import os
 import sys
@@ -10,24 +8,14 @@ from mininet.net import Mininet
 from mininet.topo import Topo
 from mininet.cli import CLI
 from mininet.link import TCLink
-
+from p4_mininet import P4GrpcSwitch, P4Host
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--p4-file', help='Path to P4 file', type=str, action="store", required=False)
 parser.add_argument('--delay', help='s1-s2 delay for OWD testing', type=str, action="store", required=False)
 
 
-def get_all_virtual_interfaces():
-    try:
-        return str.decode(subprocess.check_output("ip addr | grep s.-eth. | cut -d\':\' -f2 | cut -d\'@\' -f1", shell=True)).split('\n')
-    except subprocess.CalledProcessError as e:
-        print('Cannot retrieve interfaces.')
-        print(e)
-        return ''
-
-
-class SingleSwitchTopo(Topo):
-    "Single switch connected to n (< 256) hosts."
+class BaseTopo(Topo):
 
     def __init__(self, sw_path, json_path, **opts):
         # Initialize topology and default options
@@ -49,14 +37,11 @@ def main():
     p4dir = "/".join(args.p4_file.split("/")[:-1])
 
     result = os.system(f'p4c --target bmv2 --arch v1model --p4runtime-files {p4info} -o {p4dir} {args.p4_file}')
-
     if result != 0:
         print("Error while compiling!")
         sys.exit()
 
-    topo = SingleSwitchTopo("simple_switch_grpc", p4json)
-
-    net = Mininet(topo=topo,
+    net = Mininet(topo=BaseTopo("simple_switch_grpc", p4json),
                   host=P4Host,
                   switch=P4GrpcSwitch,
                   controller=None,
@@ -66,7 +51,7 @@ def main():
     switch_running = "simple_switch_grpc" in (p.name() for p in psutil.process_iter())
     if switch_running == False:
         print("The switch didnt start correctly! Check the path to your P4 file!!")
-        sys.exit()
+        sys.exit(1)
 
     print("Starting mininet!")
     CLI(net)

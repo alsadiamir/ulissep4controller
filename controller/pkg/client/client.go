@@ -184,12 +184,6 @@ func (c *Client) ReadEntityWildcard(entity *p4_v1.Entity, readEntityCh chan<- *p
 }
 
 func (p4RtC *Client) SendPacketOut(payload []byte, metadata []*p4_v1.PacketMetadata) error {
-	/*
-		md := &p4_v1.PacketMetadata{
-			MetadataId: 1,
-			Value:      []byte{0x00, 0x00},
-		}
-	*/
 
 	m := &p4_v1.StreamMessageRequest{
 		Update: &p4_v1.StreamMessageRequest_Packet{Packet: &p4_v1.PacketOut{
