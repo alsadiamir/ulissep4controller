@@ -19,7 +19,7 @@
         "../p4/simple.json",
         "--p4info",
         "../p4/simple.p4info.txt",
-        "--verbose"
+        "-verbose"
       ]
     }
   ]
