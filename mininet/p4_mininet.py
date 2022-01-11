@@ -127,18 +127,18 @@ class P4GrpcSwitch(Switch):
         if self.pcap_dump:
             args.append("--pcap %s" % self.pcap_dump)
         args.extend(['--device-id', str(self.device_id)])
-        if self.json_path:
-            args.append(self.json_path)
-        else:
-            args.append("--no-p4")
         if self.enable_debugger:
             args.append("--debugger")
         if self.log_console:
             args.append("--log-console")
         else:
-            args.append("--log-file %s" % self.log_file)
-        args.append("--log-flush --log-level trace")
+            args.extend(["--log-file", self.log_file])
+        args.extend(["--log-flush", "--log-level", "trace"])
 
+        if self.json_path:
+            args.append(self.json_path)
+        else:
+            args.append("--no-p4")
         if self.grpc_port:
             args.append("-- --grpc-server-addr 0.0.0.0:" + str(self.grpc_port))
         cmd = ' '.join(args)

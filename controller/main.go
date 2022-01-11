@@ -93,6 +93,13 @@ func main() {
 	flag.Parse()
 
 	if verbose {
+		// log.WithFields(log.Fields{
+		// 	"addr":   addr,
+		// 	"id":     deviceID,
+		// 	"bin":    binPath,
+		// 	"p4info": p4infoPath,
+		// 	"ports":  switchPorts,
+		// }).Info("Set log level to debug")
 		log.SetLevel(log.DebugLevel)
 	}
 
