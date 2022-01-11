@@ -66,37 +66,6 @@ func writeTunnelRules(p4RtC *client.Client, ing_port uint32, port uint32) {
 }
 
 func initialize(p4RtC *client.Client, flag uint64) error {
-	// generate a digest message for every data plane notification, not appropriate for
-	// production
-	/*
-		digestConfig := &p4_v1.DigestEntry_Config{
-			MaxTimeoutNs: 0,
-			MaxListSize:  1,
-			AckTimeoutNs: time.Second.Nanoseconds(),
-		}
-		log.Debugf("Enabling digest 'digest_t'")
-		if err := p4RtC.EnableDigest("digest_t", digestConfig); err != nil {
-			return fmt.Errorf("Cannot enable digest 'digest_t': %v", err)
-		}
-
-		log.Debugf("Configuring multicast group %d for broadcast", mgrp)
-		// TODO: ports should be configurable
-		if err := p4RtC.InsertMulticastGroup(mgrp, ports); err != nil {
-			return fmt.Errorf("Cannot configure multicast group %d for broadcast: %v", mgrp, err)
-		}
-
-		log.Debugf("Setting default action for 'dmac' table to 'broadcast'")
-		mgrpBytes, _ := conversion.UInt32ToBinary(mgrp, 2)
-		dmacEntry := p4RtC.NewTableEntry(
-			"IngressImpl.dmac",
-			nil,
-			p4RtC.NewTableActionDirect("IngressImpl.broadcast", [][]byte{mgrpBytes}),
-			nil,
-		)
-		if err := p4RtC.ModifyTableEntry(dmacEntry); err != nil {
-			return fmt.Errorf("Cannot set default action for 'dmac': %v", err)
-		}
-	*/
 	if flag == 1 {
 		writeTunnelRules(p4RtC, 255, 1)
 		writeTunnelRules(p4RtC, 1, 255)
@@ -126,14 +95,6 @@ func initialize(p4RtC *client.Client, flag uint64) error {
 		//writeTunnelRules(p4RtC,1,255)
 	}
 
-	return nil
-}
-
-func cleanup(p4RtC *client.Client) error {
-	// necessary because of https://github.com/p4lang/behavioral-model/issues/891
-	if err := p4RtC.DeleteMulticastGroup(mgrp); err != nil {
-		return fmt.Errorf("Cannot delete multicast group %d: %v", mgrp, err)
-	}
 	return nil
 }
 
@@ -177,7 +138,7 @@ func learnMacs(p4RtC *client.Client, digestList *p4_v1.DigestList) error {
 	}
 
 	if err := p4RtC.AckDigestList(digestList); err != nil {
-		return fmt.Errorf("Error when acking digest list: %v", err)
+		return fmt.Errorf("error when acking digest list: %v", err)
 	}
 
 	return nil
@@ -240,53 +201,6 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 	}
 }
 
-func printPortCounters(p4RtC *client.Client, ports []uint32, period time.Duration, stopCh <-chan struct{}) {
-	ticker := time.NewTicker(period)
-
-	printOne := func(name string) error {
-		counts, err := p4RtC.ReadCounterEntryWildcard(name)
-		if err != nil {
-			return fmt.Errorf("error when reading '%s' counters: %v", name, err)
-		}
-		values := make(map[uint32]int64, len(ports))
-		for _, p := range ports {
-			if p >= uint32(len(counts)) {
-				log.Errorf("Port %d is larger than counter size (%d)", p, len(counts))
-				continue
-			}
-			values[p] = counts[p].PacketCount
-		}
-		log.Debugf("%s: %v", name, values)
-		return nil
-	}
-
-	doPrint := func() error {
-		if err := printOne("igPortsCounts"); err != nil {
-			return err
-		}
-		if err := printOne("egPortsCounts"); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	log.Infof("Printing port counters every %v", period)
-
-	go func() {
-		defer ticker.Stop()
-		for {
-			select {
-			case <-stopCh:
-				return
-			case <-ticker.C:
-				if err := doPrint(); err != nil {
-					log.Errorf("Error when printing port counters: %v", err)
-				}
-			}
-		}
-	}()
-}
-
 func main() {
 	var addr string
 	flag.StringVar(&addr, "addr", defaultAddr, "P4Runtime server socket")
@@ -307,7 +221,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	ports, err := portsToSlice(switchPorts)
+	_, err := portsToSlice(switchPorts)
 	if err != nil {
 		log.Fatalf("Cannot parse port list: %v", err)
 	}
@@ -391,15 +305,6 @@ func main() {
 
 	if err := initialize(p4RtC, deviceID); err != nil {
 		log.Fatalf("Error when initializing defaults: %v", err)
-	}
-	defer func() {
-		if err := cleanup(p4RtC); err != nil {
-			log.Errorf("Error during cleanup: %v", err)
-		}
-	}()
-
-	if verbose {
-		printPortCounters(p4RtC, ports, 10*time.Second, stopCh)
 	}
 
 	log.Info("Do Ctrl-C to quit")
