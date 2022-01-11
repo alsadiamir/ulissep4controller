@@ -24,26 +24,6 @@ tables {
   }
   size: 1024
 }
-tables {
-  preamble {
-    id: 35862311
-    name: "MyIngress.myTunnel_exact"
-    alias: "myTunnel_exact"
-  }
-  match_fields {
-    id: 1
-    name: "standard_metadata.ingress_port"
-    bitwidth: 9
-    match_type: EXACT
-  }
-  action_refs {
-    id: 27454791
-  }
-  action_refs {
-    id: 25652968
-  }
-  size: 1024
-}
 actions {
   preamble {
     id: 21257015
@@ -64,18 +44,6 @@ actions {
     id: 28792405
     name: "MyIngress.ipv4_forward"
     alias: "ipv4_forward"
-  }
-  params {
-    id: 1
-    name: "port"
-    bitwidth: 9
-  }
-}
-actions {
-  preamble {
-    id: 27454791
-    name: "MyIngress.myTunnel_forward"
-    alias: "myTunnel_forward"
   }
   params {
     id: 1

@@ -2,6 +2,6 @@ DELAY = 100ms
 name = simple
 
 mininet: stop
-	sudo env/bin/python3 run_mininet.py --p4-file $(name).p4 --delay $(DELAY)
+	sudo env/bin/python3 run_mininet.py --p4-file ../p4/$(name).p4 --delay $(DELAY)
 stop:
 	sudo mn -c

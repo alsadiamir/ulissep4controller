@@ -7,7 +7,6 @@
 
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8>  TYPE_TCP  = 6;
-const bit<16> TYPE_MYTUNNEL = 0x1212;
 
 #define CPU_PORT 255
 /*************************************************************************
@@ -37,18 +36,6 @@ header ipv4_t {
     bit<16>   hdrChecksum;
     ip4Addr_t srcAddr;
     ip4Addr_t dstAddr;
-}
-
-header myTunnel_t {
-    bit<16> proto_id;
-    bit<16> dst_id;
-    bit<16> nhop;
-    bit<48> ts_ing1;
-    bit<48> ts_eg1;
-    bit<48> ts_is2;
-    bit<48> ts_es2;
-    bit<48> ts_ing2;
-    bit<48> ts_eg2;
 }
 
 header tcp_t{
@@ -88,7 +75,6 @@ struct headers {
     packet_in_t  packetin;
     packet_out_t packetout;
     ethernet_t   ethernet;
-    myTunnel_t  myTunnel;
     ipv4_t       ipv4;
 }
 
@@ -117,15 +103,6 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-            TYPE_MYTUNNEL: parse_myTunnel;
-            TYPE_IPV4: parse_ipv4;
-            default: accept;
-        }
-    }
-
-    state parse_myTunnel {
-        packet.extract(hdr.myTunnel);
-        transition select(hdr.myTunnel.proto_id) {
             TYPE_IPV4: parse_ipv4;
             default: accept;
         }
@@ -176,33 +153,11 @@ control MyIngress(inout headers hdr,
         size = 1024;
         default_action = drop();
     }
-
-    action myTunnel_forward(egressSpec_t port) {
-      standard_metadata.egress_spec = port;
-      hdr.myTunnel.dst_id = (bit<16>)port;
-    }
-
-    table myTunnel_exact {
-        key = {
-            standard_metadata.ingress_port: exact;
-        }
-        actions = {
-            myTunnel_forward;
-            drop;
-        }
-        size = 1024;
-        default_action = drop();
-    }
     
     apply {
 
         if (hdr.ipv4.isValid() && standard_metadata.ingress_port!=5) {
             ipv4_lpm.apply();
-        }
-
-        if (hdr.myTunnel.isValid() && standard_metadata.ingress_port!=5) {
-            hdr.myTunnel.nhop = hdr.myTunnel.nhop + 1;
-            myTunnel_exact.apply();
         }
 
         if (standard_metadata.ingress_port == CPU_PORT) { // packet out
@@ -225,22 +180,7 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
      apply {
-         if (hdr.myTunnel.isValid()) {
-             if (hdr.myTunnel.nhop >= 1) {
-                 if (hdr.myTunnel.nhop == 1) {
-                      hdr.myTunnel.ts_ing1 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_eg1 = standard_metadata.egress_global_timestamp;
-                 }
-                 if (hdr.myTunnel.nhop == 2) {
-                      hdr.myTunnel.ts_is2 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_es2 = standard_metadata.egress_global_timestamp;
-                 }
-                 if (hdr.myTunnel.nhop == 3) {
-                      hdr.myTunnel.ts_ing2 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_eg2 = standard_metadata.egress_global_timestamp;
-                 }
-             }
-         }
+
      }
 }
 
