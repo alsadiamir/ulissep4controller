@@ -72,6 +72,8 @@ def main():
 
     h2 = net.get('h2')
     h2.cmd('./recive.py &')
+    h4 = net.get('h4')
+    h4.cmd('./recive.py &')
     print("Starting mininet!")
     CLI(net)
 

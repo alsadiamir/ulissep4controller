@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 }
 
 func readCounter(p4RtC *client.Client, ports []int, deviceID uint64) error {
-	for port := range ports {
+	for _, port := range ports {
 		counter, err := p4RtC.ReadCounterEntry(packetCounter, int64(port))
 		if err != nil {
 			log.WithFields(log.Fields{"ID": deviceID, "Port": port}).Error("Failed to read counter")
@@ -92,13 +93,17 @@ func addTableEntry(p4RtC *client.Client, ip string, port int) {
 }
 
 func addConfig(p4RtC *client.Client, deviceID uint64) {
+	addTableEntry(p4RtC, "10.0.1."+strconv.FormatUint(deviceID, 10), 1)
 	switch deviceID {
 	case 1:
 		addTableEntry(p4RtC, "10.0.1.2", 2)
-		addTableEntry(p4RtC, "10.0.1.1", 1)
+		addTableEntry(p4RtC, "10.0.1.4", 2)
 	case 2:
-		addTableEntry(p4RtC, "10.0.1.2", 1)
 		addTableEntry(p4RtC, "10.0.1.1", 2)
+		addTableEntry(p4RtC, "10.0.1.4", 3)
+	case 4:
+		addTableEntry(p4RtC, "10.0.1.2", 3)
+		addTableEntry(p4RtC, "10.0.1.1", 3)
 	}
 }
 
@@ -138,11 +143,11 @@ func startSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, stopCh ch
 	go p4RtC.Run(stopCh, arbitrationCh, messageCh)
 
 	time.Sleep(500 * time.Millisecond)
-	logF.Info("Setting forwarding pipe")
 	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
 		logF.Errorf("Error when setting forwarding pipe: %v", err)
 		return err
 	}
+	logF.Debug("Setted forwarding pipe")
 
 	addConfig(p4RtC, deviceID)
 
@@ -202,6 +207,7 @@ func main() {
 	}
 
 	c := signals.RegisterSignalHandlers()
+	time.Sleep(1 * time.Second)
 	log.Info("Do Ctrl-C to quit")
 	<-c
 	for i := 0; i < (nDevices * 2); i++ {

@@ -48,7 +48,7 @@ def main():
             sleep(0.1)
             i += 1
     except KeyboardInterrupt:
-        raise
+        print('\nexiting')
 
 
 if __name__ == '__main__':
