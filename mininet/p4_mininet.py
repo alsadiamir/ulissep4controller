@@ -94,7 +94,7 @@ class P4GrpcSwitch(Switch):
                 args.extend(['-i', str(port) + "@" + intf.name])
 
         args.extend(['--device-id', str(self.device_id)])
-        args.extend(["--log-flush", "--log-level", "trace", "--log-file", "log/%s.log" % self.name])
+        args.extend(["--log-flush", "--log-level", "debug", "--log-file", "log/%s.log" % self.name])
 
         if self.json_path:
             args.append(self.json_path)

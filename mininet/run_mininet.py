@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--p4-file', help='Path to P4 file', type=str, action="store", required=False)
 
 
-class BaseTopo(Topo):
+class Topo4Switch(Topo):
 
     def __init__(self, sw_path, json_path, **opts):
         # Initialize topology and default options
@@ -23,10 +23,28 @@ class BaseTopo(Topo):
                             device_id=1, cpu_port='255')
         s2 = self.addSwitch('s2', sw_path=sw_path, json_path=json_path, grpc_port=50052,
                             device_id=2, cpu_port='255')
-        server = self.addHost('server', ip="10.10.3.3/16", mac='00:00:01:01:01:01')
-
-        self.addLink(s1, s2, port1=1, port2=1)
-        self.addLink(s1, server, port1=2, port2=1)
+        s3 = self.addSwitch('s3', sw_path=sw_path, json_path=json_path, grpc_port=50053,
+                            device_id=3, cpu_port='255')
+        s4 = self.addSwitch('s4', sw_path=sw_path, json_path=json_path, grpc_port=50054,
+                            device_id=4, cpu_port='255')
+        h1 = self.addHost('h1', ip="10.0.1.1/32", mac='00:00:01:01:01:01')
+        h2 = self.addHost('h2', ip="10.0.1.2/32", mac='00:00:01:01:01:02')
+        h3 = self.addHost('h3', ip="10.0.1.3/32", mac='00:00:01:01:01:03')
+        h4 = self.addHost('h4', ip="10.0.1.4/32", mac='00:00:01:01:01:04')
+        # h1 - s1 - s2 - h2
+        #       |   |
+        # h3 - s3 - s4 - h4
+        # P1
+        self.addLink(h1, s1)
+        self.addLink(h2, s2)
+        self.addLink(h3, s3)
+        self.addLink(h4, s4)
+        # P2
+        self.addLink(s1, s2)
+        self.addLink(s3, s4)
+        # P3
+        self.addLink(s1, s3)
+        self.addLink(s2, s4)
 
 
 def main():
@@ -40,11 +58,12 @@ def main():
         print("Error while compiling!")
         sys.exit()
 
-    net = Mininet(topo=BaseTopo("simple_switch_grpc", p4json),
+    net = Mininet(topo=Topo4Switch("simple_switch_grpc", p4json),
                   host=P4Host,
                   switch=P4GrpcSwitch,
                   controller=None,
                   link=TCLink)
+    net.xterms = True
     net.start()
 
     switch_running = "simple_switch_grpc" in (p.name() for p in psutil.process_iter())

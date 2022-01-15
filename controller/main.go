@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"strconv"
-	"strings"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -23,49 +25,19 @@ import (
 )
 
 const (
-	defaultDeviceID = 0
-	mgrp            = 0xab
-	macTimeout      = 10 * time.Second
-	defaultPorts    = "0,1,2,3,4,5,6,7"
+	defaultPort = 50050
+	defaultAddr = "127.0.0.1"
 )
 
-var (
-	defaultAddr = fmt.Sprintf("127.0.0.1:%d", client.P4RuntimePort)
-)
-
-func portsToSlice(ports string) ([]uint32, error) {
-	p := strings.Split(ports, ",")
-	res := make([]uint32, len(p))
-	for idx, vStr := range p {
-		v, err := strconv.Atoi(vStr)
-		if err != nil {
-			return nil, err
-		}
-		res[idx] = uint32(v)
-	}
-	return res, nil
-}
+// var (
+// 	defaultIp = net.ParseIP(defaultAddr).To4()
+// )
 
 func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMessageResponse) {
 	for message := range messageCh {
-		switch m := message.Update.(type) {
+		switch message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:
-			for _, metadata := range m.Packet.GetMetadata() {
-				if metadata.GetMetadataId() == 1 {
-					destAddr := net.HardwareAddr(metadata.GetValue())
-					log.Debugf("Recived packet in: destAddr %s", destAddr.String())
-					outPort, _ := conversion.UInt32ToBinaryCompressed(2)
-					outMetadata := []*p4_v1.PacketMetadata{
-						{
-							MetadataId: 1,
-							Value:      outPort,
-						},
-					}
-					p4RtC.SendPacketOut(m.Packet.Payload, outMetadata)
-				} else {
-					log.Debugf("Recived unknown packet in metadata id: %d", metadata.GetMetadataId())
-				}
-			}
+			log.Debugf("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
 			log.Debugf("Received DigestList")
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
@@ -78,36 +50,95 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 	}
 }
 
+func addTableEntry(p4RtC *client.Client, ip string, port int) {
+	p, _ := conversion.UInt32ToBinaryCompressed(uint32(port))
+	ipv4 := net.ParseIP(ip).To4()
+	entry := p4RtC.NewTableEntry(
+		"MyIngress.ipv4_lpm",
+		[]client.MatchInterface{&client.LpmMatch{
+			Value: ipv4,
+			PLen:  32,
+		}},
+		p4RtC.NewTableActionDirect("MyIngress.ipv4_forward", [][]byte{p}),
+		nil,
+	)
+	if err := p4RtC.InsertTableEntry(entry); err != nil {
+		log.Errorf("Cannot insert entry :%v", err)
+	} else {
+		log.Debugf("Added table entry to device")
+	}
+}
+
+func addConfig(p4RtC *client.Client, deviceID uint64) {
+	switch deviceID {
+	case 1:
+		addTableEntry(p4RtC, "10.0.1.2", 2)
+		addTableEntry(p4RtC, "10.0.1.1", 1)
+	case 2:
+		addTableEntry(p4RtC, "10.0.1.2", 1)
+		addTableEntry(p4RtC, "10.0.1.1", 2)
+	}
+}
+
+func startSwitch(wg *sync.WaitGroup, deviceID uint64, binBytes []byte, p4infoBytes []byte) {
+	defer wg.Done()
+
+	addr := fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID)
+	log.Infof("Connecting to server at %s", addr)
+
+	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
+	if err != nil {
+		log.Fatalf("Cannot create credentials: %v", err)
+	}
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		log.Fatalf("Cannot connect to server: %v", err)
+	}
+	defer conn.Close()
+
+	c := p4_v1.NewP4RuntimeClient(conn)
+	resp, err := c.Capabilities(context.Background(), &p4_v1.CapabilitiesRequest{})
+	if err != nil {
+		log.Fatalf("Error in Capabilities RPC: %v", err)
+	}
+	log.Infof("Connected to %s, runtime version: %s", addr, resp.P4RuntimeApiVersion)
+
+	// create channels
+	electionID := p4_v1.Uint128{High: 0, Low: 1}
+	stopCh := signals.RegisterSignalHandlers()
+	arbitrationCh := make(chan bool)
+	messageCh := make(chan *p4_v1.StreamMessageResponse, 1000)
+	defer close(messageCh)
+
+	// create the p4runtime client
+	p4RtC := client.NewClient(c, deviceID, electionID)
+	go p4RtC.Run(stopCh, arbitrationCh, messageCh)
+
+	time.Sleep(500 * time.Millisecond)
+	log.Info("Setting forwarding pipe")
+	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
+		log.Fatalf("Error when setting forwarding pipe: %v", err)
+	}
+
+	// start handling packet i/o
+	addConfig(p4RtC, deviceID)
+	handleStreamMessages(p4RtC, messageCh)
+}
+
 func main() {
-	var addr string
-	flag.StringVar(&addr, "addr", defaultAddr, "P4Runtime server socket")
-	var deviceID uint64
-	flag.Uint64Var(&deviceID, "device-id", defaultDeviceID, "Device id")
+	var wg sync.WaitGroup
+	var nDevices int
+	flag.IntVar(&nDevices, "n", 1, "Number of devices")
 	var verbose bool
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
 	var binPath string
 	flag.StringVar(&binPath, "bin", "", "Path to P4 bin (not needed for bmv2 simple_switch_grpc)")
 	var p4infoPath string
 	flag.StringVar(&p4infoPath, "p4info", "", "Path to P4Info (not needed for bmv2 simple_switch_grpc)")
-	var switchPorts string
-	flag.StringVar(&switchPorts, "ports", defaultPorts, "List of switch ports - required for configuring multicast group for broadcast")
-
 	flag.Parse()
 
 	if verbose {
-		// log.WithFields(log.Fields{
-		// 	"addr":   addr,
-		// 	"id":     deviceID,
-		// 	"bin":    binPath,
-		// 	"p4info": p4infoPath,
-		// 	"ports":  switchPorts,
-		// }).Info("Set log level to debug")
 		log.SetLevel(log.DebugLevel)
-	}
-
-	_, err := portsToSlice(switchPorts)
-	if err != nil {
-		log.Fatalf("Cannot parse port list: %v", err)
 	}
 
 	binBytes := []byte("per")
@@ -126,65 +157,19 @@ func main() {
 		}
 	}
 
-	log.Infof("Connecting to server at %s", addr)
-	creds, _ := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
-	if err != nil {
-		log.Fatalf("Cannot connect to server: %v", err)
+	var i uint64
+	for i = 1; i <= uint64(nDevices); i++ {
+		wg.Add(1)
+		go startSwitch(&wg, i, binBytes, p4infoBytes)
 	}
-	defer conn.Close()
 
-	c := p4_v1.NewP4RuntimeClient(conn)
-	resp, err := c.Capabilities(context.Background(), &p4_v1.CapabilitiesRequest{})
-	if err != nil {
-		log.Fatalf("Error in Capabilities RPC: %v", err)
-	}
-	log.Infof("P4Runtime server version is %s", resp.P4RuntimeApiVersion)
-
-	// create channels
-	electionID := p4_v1.Uint128{High: 0, Low: 1}
-	stopCh := signals.RegisterSignalHandlers()
-	arbitrationCh := make(chan bool)
-	waitCh := make(chan struct{})
-	messageCh := make(chan *p4_v1.StreamMessageResponse, 1000)
-	defer close(messageCh)
-
-	// create the p4runtime client
-	p4RtC := client.NewClient(c, deviceID, electionID)
-	go p4RtC.Run(stopCh, arbitrationCh, messageCh)
-
-	// check if we are the primary client so we can do packet I/O
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		for isPrimary := range arbitrationCh {
-			if isPrimary {
-				log.Infof("We are the primary client!")
-				waitCh <- struct{}{}
-				break
-			} else {
-				log.Infof("We are not the primary client!")
-			}
-		}
+		<-c
+		log.Info("Ctrl+C Pressed Exiting")
+		os.Exit(0)
 	}()
 
-	// wait for 5 seconds to become the primary client
-	timeout := 5 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	select {
-	case <-ctx.Done():
-		log.Fatalf("Could not become the primary client within %v", timeout)
-	case <-waitCh:
-	}
-
-	log.Info("Setting forwarding pipe")
-	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
-		log.Fatalf("Error when setting forwarding pipe: %v", err)
-	}
-
-	// start handling packet i/o
-	go handleStreamMessages(p4RtC, messageCh)
-
-	log.Info("Do Ctrl-C to quit")
-	<-stopCh
-	log.Info("Stopping client")
+	wg.Wait()
 }
