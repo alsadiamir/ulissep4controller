@@ -51,5 +51,16 @@ actions {
     bitwidth: 9
   }
 }
+counters {
+  preamble {
+    id: 302398569
+    name: "MyIngress.port_packets_in"
+    alias: "port_packets_in"
+  }
+  spec {
+    unit: PACKETS
+  }
+  size: 4
+}
 type_info {
 }

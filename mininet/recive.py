@@ -22,8 +22,8 @@ def get_if():
 
 
 def handle_pkt(pkt):
-    print("got a packet")
-    pkt.show2()
+    print("new packet")
+    # pkt.show2()
     sys.stdout.flush()
 
 

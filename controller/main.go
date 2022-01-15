@@ -6,10 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -25,13 +21,12 @@ import (
 )
 
 const (
-	defaultPort = 50050
-	defaultAddr = "127.0.0.1"
+	defaultPort     = 50050
+	defaultAddr     = "127.0.0.1"
+	packetCounter   = "MyIngress.port_packets_in"
+	packetCountWarn = 20
+	packetCheckRate = 5 * time.Second
 )
-
-// var (
-// 	defaultIp = net.ParseIP(defaultAddr).To4()
-// )
 
 func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMessageResponse) {
 	for message := range messageCh {
@@ -48,6 +43,33 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 			log.Errorf("Received unknown stream message")
 		}
 	}
+}
+
+func readCounter(p4RtC *client.Client, ports []int, deviceID uint64) error {
+	for port := range ports {
+		counter, err := p4RtC.ReadCounterEntry(packetCounter, int64(port))
+		if err != nil {
+			log.WithFields(log.Fields{"ID": deviceID, "Port": port}).Error("Failed to read counter")
+			return err
+		}
+
+		lFields := log.WithFields(log.Fields{"ID": deviceID, "Port": port})
+		if counter.GetPacketCount() > packetCountWarn {
+			lFields.Warnf("Packet count %d", counter.GetPacketCount())
+		} else {
+			lFields.Debugf("Packet count %d", counter.GetPacketCount())
+		}
+		err = p4RtC.ModifyCounterEntry(
+			packetCounter,
+			int64(port),
+			&p4_v1.CounterData{PacketCount: 0},
+		)
+		if err != nil {
+			log.WithFields(log.Fields{"ID": deviceID, "Port": port}).Error("Failed to set counter")
+			return err
+		}
+	}
+	return nil
 }
 
 func addTableEntry(p4RtC *client.Client, ip string, port int) {
@@ -80,34 +102,35 @@ func addConfig(p4RtC *client.Client, deviceID uint64) {
 	}
 }
 
-func startSwitch(wg *sync.WaitGroup, deviceID uint64, binBytes []byte, p4infoBytes []byte) {
-	defer wg.Done()
-
+func startSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, stopCh chan struct{}) error {
 	addr := fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID)
-	log.Infof("Connecting to server at %s", addr)
+	logF := log.WithField("ID", deviceID)
+	logF.Infof("Connecting to server at %s", addr)
 
 	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
 	if err != nil {
-		log.Fatalf("Cannot create credentials: %v", err)
+		logF.Errorf("Cannot create credentials: %v", err)
+		return err
 	}
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		log.Fatalf("Cannot connect to server: %v", err)
+		logF.Errorf("Cannot connect to server: %v", err)
+		return err
 	}
 	defer conn.Close()
 
 	c := p4_v1.NewP4RuntimeClient(conn)
 	resp, err := c.Capabilities(context.Background(), &p4_v1.CapabilitiesRequest{})
 	if err != nil {
-		log.Fatalf("Error in Capabilities RPC: %v", err)
+		logF.Errorf("Error in Capabilities RPC: %v", err)
+		return err
 	}
-	log.Infof("Connected to %s, runtime version: %s", addr, resp.P4RuntimeApiVersion)
+	logF.Infof("Connected to %s, runtime version: %s", addr, resp.P4RuntimeApiVersion)
 
 	// create channels
 	electionID := p4_v1.Uint128{High: 0, Low: 1}
-	stopCh := signals.RegisterSignalHandlers()
 	arbitrationCh := make(chan bool)
-	messageCh := make(chan *p4_v1.StreamMessageResponse, 1000)
+	messageCh := make(chan *p4_v1.StreamMessageResponse, 100)
 	defer close(messageCh)
 
 	// create the p4runtime client
@@ -115,18 +138,33 @@ func startSwitch(wg *sync.WaitGroup, deviceID uint64, binBytes []byte, p4infoByt
 	go p4RtC.Run(stopCh, arbitrationCh, messageCh)
 
 	time.Sleep(500 * time.Millisecond)
-	log.Info("Setting forwarding pipe")
+	logF.Info("Setting forwarding pipe")
 	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
-		log.Fatalf("Error when setting forwarding pipe: %v", err)
+		logF.Errorf("Error when setting forwarding pipe: %v", err)
+		return err
 	}
 
-	// start handling packet i/o
 	addConfig(p4RtC, deviceID)
-	handleStreamMessages(p4RtC, messageCh)
+
+	// read counters
+	ticker := time.NewTicker(packetCheckRate)
+	go func() {
+		for {
+			<-ticker.C
+			if err := readCounter(p4RtC, []int{1, 2, 3}, deviceID); err != nil {
+				ticker.Stop()
+			}
+		}
+	}()
+
+	// start handling packet i/o blocking
+	go handleStreamMessages(p4RtC, messageCh)
+	<-stopCh
+	logF.Debugf("Stopped", deviceID)
+	return nil
 }
 
 func main() {
-	var wg sync.WaitGroup
 	var nDevices int
 	flag.IntVar(&nDevices, "n", 1, "Number of devices")
 	var verbose bool
@@ -158,18 +196,16 @@ func main() {
 	}
 
 	var i uint64
+	stopCh := make(chan struct{})
 	for i = 1; i <= uint64(nDevices); i++ {
-		wg.Add(1)
-		go startSwitch(&wg, i, binBytes, p4infoBytes)
+		go startSwitch(i, binBytes, p4infoBytes, stopCh)
 	}
 
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		log.Info("Ctrl+C Pressed Exiting")
-		os.Exit(0)
-	}()
-
-	wg.Wait()
+	c := signals.RegisterSignalHandlers()
+	log.Info("Do Ctrl-C to quit")
+	<-c
+	for i := 0; i < (nDevices * 2); i++ {
+		stopCh <- struct{}{}
+	}
+	log.Info("Controller stopped")
 }

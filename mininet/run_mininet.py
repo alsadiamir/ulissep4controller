@@ -63,7 +63,6 @@ def main():
                   switch=P4GrpcSwitch,
                   controller=None,
                   link=TCLink)
-    net.xterms = True
     net.start()
 
     switch_running = "simple_switch_grpc" in (p.name() for p in psutil.process_iter())
@@ -71,6 +70,8 @@ def main():
         print("The switch didnt start correctly! Check the path to your P4 file!!")
         sys.exit(1)
 
+    h2 = net.get('h2')
+    h2.cmd('./recive.py &')
     print("Starting mininet!")
     CLI(net)
 

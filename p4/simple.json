@@ -3,7 +3,9 @@
     {
       "name" : "scalars_0",
       "id" : 0,
-      "fields" : []
+      "fields" : [
+        ["tmp", 32, false]
+      ]
     },
     {
       "name" : "standard_metadata",
@@ -176,7 +178,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "../p4/simple.p4",
-        "line" : 159,
+        "line" : 163,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -185,7 +187,20 @@
     }
   ],
   "meter_arrays" : [],
-  "counter_arrays" : [],
+  "counter_arrays" : [
+    {
+      "name" : "MyIngress.port_packets_in",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/simple.p4",
+        "line" : 90,
+        "column" : 44,
+        "source_fragment" : "port_packets_in"
+      },
+      "size" : 4,
+      "is_direct" : false
+    }
+  ],
   "register_arrays" : [],
   "calculations" : [
     {
@@ -193,7 +208,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "../p4/simple.p4",
-        "line" : 137,
+        "line" : 141,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -269,7 +284,7 @@
           ],
           "source_info" : {
             "filename" : "../p4/simple.p4",
-            "line" : 90,
+            "line" : 93,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -300,7 +315,7 @@
           ],
           "source_info" : {
             "filename" : "../p4/simple.p4",
-            "line" : 95,
+            "line" : 98,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -342,9 +357,67 @@
           ],
           "source_info" : {
             "filename" : "../p4/simple.p4",
-            "line" : 98,
+            "line" : 101,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "simple118",
+      "id" : 3,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["standard_metadata", "ingress_port"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/simple.p4",
+            "line" : 118,
+            "column" : 30,
+            "source_fragment" : "(bit<32>) standard_metadata.ingress_port"
+          }
+        },
+        {
+          "op" : "count",
+          "parameters" : [
+            {
+              "type" : "counter_array",
+              "value" : "MyIngress.port_packets_in"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/simple.p4",
+            "line" : 118,
+            "column" : 8,
+            "source_fragment" : "port_packets_in.count((bit<32>) standard_metadata.ingress_port)"
           }
         }
       ]
@@ -356,18 +429,47 @@
       "id" : 0,
       "source_info" : {
         "filename" : "../p4/simple.p4",
-        "line" : 86,
+        "line" : 87,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
-      "init_table" : "node_2",
+      "init_table" : "tbl_simple118",
       "tables" : [
         {
-          "name" : "MyIngress.ipv4_lpm",
+          "name" : "tbl_simple118",
           "id" : 0,
           "source_info" : {
             "filename" : "../p4/simple.p4",
-            "line" : 101,
+            "line" : 118,
+            "column" : 8,
+            "source_fragment" : "port_packets_in.count((bit<32>) standard_metadata.ingress_port)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [3],
+          "actions" : ["simple118"],
+          "base_default_next" : "node_3",
+          "next_tables" : {
+            "simple118" : "node_3"
+          },
+          "default_entry" : {
+            "action_id" : 3,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "MyIngress.ipv4_lpm",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "../p4/simple.p4",
+            "line" : 104,
             "column" : 10,
             "source_fragment" : "ipv4_lpm"
           },
@@ -404,11 +506,11 @@
       "action_profiles" : [],
       "conditionals" : [
         {
-          "name" : "node_2",
+          "name" : "node_3",
           "id" : 0,
           "source_info" : {
             "filename" : "../p4/simple.p4",
-            "line" : 115,
+            "line" : 119,
             "column" : 12,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
@@ -433,7 +535,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "../p4/simple.p4",
-        "line" : 125,
+        "line" : 129,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -449,7 +551,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "../p4/simple.p4",
-        "line" : 137,
+        "line" : 141,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },

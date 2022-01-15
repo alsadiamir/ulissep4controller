@@ -6,7 +6,8 @@ from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, ICMP, UDP
 import sys
 import socket
-from time import sleep
+from time import sleep, time
+import os
 
 
 def get_if():
@@ -23,18 +24,29 @@ def get_if():
 
 
 def main():
-    print("main")
-    addr = socket.gethostbyname("10.0.1.2")
+
+    if len(sys.argv) < 1:
+        print('pass 1 arguments: <destination> ')
+        os.exit(1)
+
+    addr = socket.gethostbyname(sys.argv[1])
     iface = get_if()
 
     pkt = Ether(src=get_if_hwaddr(iface), dst="ff:ff:ff:ff:ff:ff")
-    pkt = pkt / IP(dst=addr) / UDP(dport=4321, sport=1234) / "ciao"
-    pkt.show2()
+    pkt = pkt / IP(dst=addr) / UDP(dport=4321, sport=1234) / str(time())
+    # pkt.show2()
     sendp(pkt, iface=iface)
+    i = 0
     try:
-        for i in range(int(100)):
-            sendp(pkt, iface=iface)
-            sleep(5)
+        while (True):
+            if (i == 100):
+                i = 0
+                print('')
+            sendp(pkt, iface=iface, verbose=False)
+            print(".", end='')
+            sys.stdout.flush()
+            sleep(0.1)
+            i += 1
     except KeyboardInterrupt:
         raise
 

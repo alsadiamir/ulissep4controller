@@ -3,6 +3,7 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
+const bit<32> NUM_PORTS = 4;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -86,6 +87,8 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
+    counter(NUM_PORTS, CounterType.packets) port_packets_in;
+
     action drop() {
         mark_to_drop(standard_metadata);
     }
@@ -112,6 +115,7 @@ control MyIngress(inout headers hdr,
     }
     
     apply {
+        port_packets_in.count((bit<32>) standard_metadata.ingress_port);
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
         }
