@@ -2,15 +2,14 @@
 
 ## How to run it
 
-1) On one terminal: 
+1. Start mininet:
+
 ```console
-foo@bar:~$ make topo
+# make topo
 ```
-2) On another terminal: 
+
+2. Start the controller:
+
 ```console
-foo@bar:~$ make controller2
-```
-3) On another terminal: 
-```console
-foo@bar:~$ make controller1
+# make ctrl
 ```

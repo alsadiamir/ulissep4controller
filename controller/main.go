@@ -22,12 +22,26 @@ import (
 )
 
 const (
-	defaultPort     = 50050
-	defaultAddr     = "127.0.0.1"
-	packetCounter   = "MyIngress.port_packets_in"
-	packetCountWarn = 20
-	packetCheckRate = 5 * time.Second
+	defaultPort      = 50050
+	defaultAddr      = "127.0.0.1"
+	defaultWait      = 250 * time.Millisecond
+	reconnectTimeout = 5 * time.Second
+	maxRetry         = 5
+	packetCounter    = "MyIngress.port_packets_in"
+	packetCountWarn  = 20
+	packetCheckRate  = 5 * time.Second
 )
+
+type swError struct {
+	err error  // errors
+	id  uint64 // deviceId
+}
+
+type swState struct {
+	//id       uint64
+	ok       bool
+	nRestart int
+}
 
 func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMessageResponse) {
 	for message := range messageCh {
@@ -46,7 +60,8 @@ func handleStreamMessages(p4RtC *client.Client, messageCh <-chan *p4_v1.StreamMe
 	}
 }
 
-func readCounter(p4RtC *client.Client, ports []int, deviceID uint64) error {
+func readCounter(p4RtC *client.Client, ports []int) error {
+	deviceID := p4RtC.GetDeviceId()
 	for _, port := range ports {
 		counter, err := p4RtC.ReadCounterEntry(packetCounter, int64(port))
 		if err != nil {
@@ -86,13 +101,14 @@ func addTableEntry(p4RtC *client.Client, ip string, port int) {
 		nil,
 	)
 	if err := p4RtC.InsertTableEntry(entry); err != nil {
-		log.Errorf("Cannot insert entry :%v", err)
+		log.WithField("ID", p4RtC.GetDeviceId()).Errorf("Cannot insert entry :%v", err)
 	} else {
-		log.Debugf("Added table entry to device")
+		log.WithField("ID", p4RtC.GetDeviceId()).Debugf("Added table entry to device")
 	}
 }
 
-func addConfig(p4RtC *client.Client, deviceID uint64) {
+func addConfig(p4RtC *client.Client) {
+	deviceID := p4RtC.GetDeviceId()
 	addTableEntry(p4RtC, "10.0.1."+strconv.FormatUint(deviceID, 10), 1)
 	switch deviceID {
 	case 1:
@@ -107,34 +123,35 @@ func addConfig(p4RtC *client.Client, deviceID uint64) {
 	}
 }
 
-func startSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, stopCh chan struct{}) error {
+func runSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, stateCh chan swError) {
 	addr := fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID)
 	logF := log.WithField("ID", deviceID)
 	logF.Infof("Connecting to server at %s", addr)
 
 	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
 	if err != nil {
-		logF.Errorf("Cannot create credentials: %v", err)
-		return err
+		stateCh <- swError{err, deviceID}
+		return
 	}
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		logF.Errorf("Cannot connect to server: %v", err)
-		return err
+		stateCh <- swError{err, deviceID}
+		return
 	}
 	defer conn.Close()
 
 	c := p4_v1.NewP4RuntimeClient(conn)
 	resp, err := c.Capabilities(context.Background(), &p4_v1.CapabilitiesRequest{})
 	if err != nil {
-		logF.Errorf("Error in Capabilities RPC: %v", err)
-		return err
+		stateCh <- swError{err, deviceID}
+		return
 	}
 	logF.Infof("Connected to %s, runtime version: %s", addr, resp.P4RuntimeApiVersion)
 
 	// create channels
 	electionID := p4_v1.Uint128{High: 0, Low: 1}
 	arbitrationCh := make(chan bool)
+	stopCh := make(chan struct{})
 	messageCh := make(chan *p4_v1.StreamMessageResponse, 100)
 	defer close(messageCh)
 
@@ -142,31 +159,36 @@ func startSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, stopCh ch
 	p4RtC := client.NewClient(c, deviceID, electionID)
 	go p4RtC.Run(stopCh, arbitrationCh, messageCh)
 
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(defaultWait)
 	if _, err := p4RtC.SetFwdPipeFromBytes(binBytes, p4infoBytes, 0); err != nil {
-		logF.Errorf("Error when setting forwarding pipe: %v", err)
-		return err
+		stateCh <- swError{err, deviceID}
+		stopCh <- struct{}{}
+		return
 	}
 	logF.Debug("Setted forwarding pipe")
 
-	addConfig(p4RtC, deviceID)
+	// add default switch config
+	addConfig(p4RtC)
 
-	// read counters
-	ticker := time.NewTicker(packetCheckRate)
-	go func() {
-		for {
-			<-ticker.C
-			if err := readCounter(p4RtC, []int{1, 2, 3}, deviceID); err != nil {
-				ticker.Stop()
-			}
-		}
-	}()
-
-	// start handling packet i/o blocking
+	// start handling packet i/o
 	go handleStreamMessages(p4RtC, messageCh)
-	<-stopCh
-	logF.Debugf("Stopped", deviceID)
-	return nil
+
+	// handle ticker and disconnession
+	ticker := time.NewTicker(packetCheckRate)
+	for {
+		select {
+		case <-ticker.C:
+			if err := readCounter(p4RtC, []int{1, 2, 3}); err != nil {
+				stateCh <- swError{err, deviceID}
+				stopCh <- struct{}{}
+				return
+			}
+		case <-stateCh:
+			stopCh <- struct{}{}
+			logF.Debug("Stopped client")
+			return
+		}
+	}
 }
 
 func main() {
@@ -183,6 +205,7 @@ func main() {
 	if verbose {
 		log.SetLevel(log.DebugLevel)
 	}
+	log.Infof("Starting %d devices", nDevices)
 
 	binBytes := []byte("per")
 	if binPath != "" {
@@ -201,17 +224,42 @@ func main() {
 	}
 
 	var i uint64
-	stopCh := make(chan struct{})
+	stateCh := make(chan swError)
+	states := make([]swState, nDevices+1)
 	for i = 1; i <= uint64(nDevices); i++ {
-		go startSwitch(i, binBytes, p4infoBytes, stopCh)
+		states[i] = swState{true, 0}
+		go runSwitch(i, binBytes, p4infoBytes, stateCh)
 	}
 
-	c := signals.RegisterSignalHandlers()
-	time.Sleep(1 * time.Second)
+	// clean exit
+	signalCh := signals.RegisterSignalHandlers()
+	time.Sleep(defaultWait)
 	log.Info("Do Ctrl-C to quit")
-	<-c
-	for i := 0; i < (nDevices * 2); i++ {
-		stopCh <- struct{}{}
+	for {
+		select {
+		case <-signalCh:
+			log.Debug("Signal to stop")
+			// stop only the active switches
+			for _, state := range states {
+				if state.ok {
+					stateCh <- swError{}
+				}
+			}
+			time.Sleep(defaultWait)
+			return
+		case state := <-stateCh:
+			// register error of a specific switch
+			log.WithField("ID", state.id).Errorf("Error %v", state.err)
+			states[state.id].ok = false
+			if states[state.id].nRestart == maxRetry {
+				break
+			}
+			states[state.id].nRestart += 1
+			time.AfterFunc(reconnectTimeout, func() {
+				states[state.id].ok = true
+				log.WithField("ID", state.id).Infof("Tring to reconnect, attempt %d", states[state.id].nRestart)
+				go runSwitch(uint64(state.id), binBytes, p4infoBytes, stateCh)
+			})
+		}
 	}
-	log.Info("Controller stopped")
 }

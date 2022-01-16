@@ -4,4 +4,4 @@ name = simple
 topo: 
 	make -C ./mininet mininet
 ctrl:
-	make -C ./controller ctrl
+	make -C ./controller prod

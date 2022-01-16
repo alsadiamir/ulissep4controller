@@ -56,6 +56,10 @@ func NewClient(
 	}
 }
 
+func (c *Client) GetDeviceId() uint64 {
+	return c.deviceID
+}
+
 func (c *Client) Run(
 	stopCh <-chan struct{},
 	arbitrationCh chan<- bool,
