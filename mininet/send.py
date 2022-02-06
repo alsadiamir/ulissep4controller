@@ -45,7 +45,7 @@ def main():
             sendp(pkt, iface=iface, verbose=False)
             print(".", end='')
             sys.stdout.flush()
-            sleep(0.1)
+            sleep(0.15)
             i += 1
     except KeyboardInterrupt:
         print('\nexiting')
