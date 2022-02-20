@@ -61,7 +61,7 @@ func (c *Client) GetDeviceId() uint64 {
 }
 
 func (c *Client) Run(
-	stopCh <-chan struct{},
+	ctx context.Context,
 	arbitrationCh chan<- bool,
 	messageCh chan<- *p4_v1.StreamMessageResponse, // all other stream messages besides arbitration
 ) error {
@@ -69,7 +69,6 @@ func (c *Client) Run(
 	if err != nil {
 		return fmt.Errorf("cannot establish stream: %v", err)
 	}
-
 	defer stream.CloseSend()
 
 	go func() {
@@ -110,7 +109,7 @@ func (c *Client) Run(
 		select {
 		case m := <-c.streamSendCh:
 			stream.Send(m)
-		case <-stopCh:
+		case <-ctx.Done():
 			return nil
 		}
 	}

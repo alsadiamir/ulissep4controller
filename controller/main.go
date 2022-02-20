@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +17,7 @@ const (
 	defaultAddr      = "127.0.0.1"
 	defaultWait      = 250 * time.Millisecond
 	reconnectTimeout = 5 * time.Second
-	maxRetry         = 5
+	maxRetry         = 3
 	packetCounter    = "MyIngress.port_packets_in"
 	packetCountWarn  = 20
 	packetCheckRate  = 5 * time.Second
@@ -54,11 +55,11 @@ func main() {
 		}
 	}
 
-	endCh := make(chan struct{}, nDevices)
 	switchs := make([]*GrpcSwitch, nDevices)
+	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(uint64(i+1), binBytes, p4infoBytes, 3)
-		if err := sw.runSwitch(endCh); err != nil {
+		sw := createSwitch(ctx, uint64(i+1), binBytes, p4infoBytes, 3)
+		if err := sw.runSwitch(); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
 		}
@@ -70,10 +71,6 @@ func main() {
 	log.Info("Do Ctrl-C to quit")
 	<-signalCh
 	fmt.Println()
-	for _, sw := range switchs {
-		if sw.running {
-			endCh <- struct{}{}
-		}
-	}
+	cancel()
 	time.Sleep(defaultWait)
 }

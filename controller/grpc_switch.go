@@ -4,7 +4,6 @@ import (
 	"context"
 	"controller/pkg/client"
 	"fmt"
-	"runtime"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -21,14 +20,13 @@ type GrpcSwitch struct {
 	addr        string
 	restarts    int
 	log         *log.Entry
-	running     bool
 	errCh       chan error
-	stopCh      chan struct{}
+	ctx         context.Context
 	p4RtC       *client.Client
 	messageCh   chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, ports int) *GrpcSwitch {
+func createSwitch(ctx context.Context, deviceID uint64, binBytes []byte, p4infoBytes []byte, ports int) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:          deviceID,
 		binBytes:    binBytes,
@@ -36,11 +34,11 @@ func createSwitch(deviceID uint64, binBytes []byte, p4infoBytes []byte, ports in
 		ports:       ports,
 		addr:        fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:         log.WithField("ID", deviceID),
-		running:     false,
+		ctx:         ctx,
 	}
 }
 
-func (sw *GrpcSwitch) runSwitch(endCh chan struct{}) error {
+func (sw *GrpcSwitch) runSwitch() error {
 	sw.log.Infof("Connecting to server at %s", sw.addr)
 	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
 	if err != nil {
@@ -52,74 +50,67 @@ func (sw *GrpcSwitch) runSwitch(endCh chan struct{}) error {
 	}
 	// checking runtime
 	c := p4_v1.NewP4RuntimeClient(conn)
-	resp, err := c.Capabilities(context.Background(), &p4_v1.CapabilitiesRequest{})
+	resp, err := c.Capabilities(sw.ctx, &p4_v1.CapabilitiesRequest{})
 	if err != nil {
 		return err
 	}
 	sw.log.Infof("Connected, runtime version: %s", resp.P4RuntimeApiVersion)
-	// create channels
+	// create runtime client
 	electionID := p4_v1.Uint128{High: 0, Low: 1}
-	sw.stopCh = make(chan struct{})
 	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 100)
-	// create the p4runtime client
 	sw.p4RtC = client.NewClient(c, sw.id, electionID)
-	go sw.p4RtC.Run(sw.stopCh, make(chan bool), sw.messageCh)
+	go sw.p4RtC.Run(sw.ctx, make(chan bool), sw.messageCh)
 	// set pipeline config
 	time.Sleep(defaultWait)
 	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
-		sw.stopCh <- struct{}{}
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
+
 	sw.errCh = make(chan error, 1)
-	// add default switch config
 	sw.addConfig()
-	// start handling packet i/o
 	go sw.handleStreamMessages()
-	// handle ticker
-	go sw.startRunner(endCh, conn)
+	go sw.startRunner(conn)
 
 	return nil
 }
 
-// for now just reading counters
-func (sw *GrpcSwitch) startRunner(endCh chan struct{}, conn *grpc.ClientConn) {
-	ticker := time.NewTicker(packetCheckRate)
-	sw.running = true
+func (sw *GrpcSwitch) startRunner(conn *grpc.ClientConn) {
 	defer func() {
-		sw.running = false
-		sw.stopCh <- struct{}{}
 		close(sw.messageCh)
 		conn.Close()
 		sw.log.Info("Stopping")
 	}()
+	// handle ticker
+	ticker := time.NewTicker(packetCheckRate)
 	for {
 		select {
 		case <-ticker.C:
-			sw.log.Debug("Reading counter")
 			sw.readCounter()
-			runtime.Gosched()
 		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
-			go sw.reconnect(endCh)
+			go sw.reconnect()
 			return
-		case <-endCh:
+		case <-sw.ctx.Done():
 			return
 		}
 	}
 }
 
-func (sw *GrpcSwitch) reconnect(endCh chan struct{}) {
-	if sw.restarts > maxRetry {
+func (sw *GrpcSwitch) reconnect() {
+	if sw.restarts >= maxRetry {
 		sw.log.Errorf("Max retry attempt, killing")
 		return
 	}
 	sw.restarts++
 	sw.log.Infof("Reconnect attempt n. %d", sw.restarts)
-	if err := sw.runSwitch(endCh); err != nil {
+	if err := sw.runSwitch(); err != nil {
 		sw.log.Errorf("%v", err)
 		time.Sleep(reconnectTimeout)
-		sw.reconnect(endCh)
+		sw.reconnect()
+	} else {
+		// reset retries
+		sw.restarts = 0
 	}
 }
 
@@ -142,6 +133,7 @@ func (sw *GrpcSwitch) handleStreamMessages() {
 }
 
 func (sw *GrpcSwitch) readCounter() {
+	sw.log.Debug("Reading counter")
 	for port := 1; port <= sw.ports; port++ {
 		lFields := log.WithFields(log.Fields{"ID": sw.id, "Port": port})
 		// read counter
@@ -168,7 +160,7 @@ func (sw *GrpcSwitch) readCounter() {
 	}
 }
 
-func (sw *GrpcSwitch) addTableEntryBytes(ip []byte, mac []byte, port []byte) {
+func (sw *GrpcSwitch) addTableEntry(ip []byte, mac []byte, port []byte) {
 	entry := sw.p4RtC.NewTableEntry(
 		"MyIngress.ipv4_lpm",
 		[]client.MatchInterface{&client.LpmMatch{
@@ -185,15 +177,8 @@ func (sw *GrpcSwitch) addTableEntryBytes(ip []byte, mac []byte, port []byte) {
 	sw.log.Debugf("Added table entry to device")
 }
 
-// func (sw *GrpcSwitch) addTableEntry(ip string, mac string, port int) {
-// 	ip4, _ := conversion.IpToBinary(ip)
-// 	portBytes, _ := conversion.UInt32ToBinaryCompressed(uint32(port))
-// 	macBytes, _ := conversion.MacToBinary(mac)
-// 	sw.addTableEntryBytes(ip4, macBytes, portBytes)
-// }
-
 func (sw *GrpcSwitch) addConfig() {
 	for _, link := range GetLinksBytes(sw.id) {
-		sw.addTableEntryBytes(link.ip, link.mac, link.port)
+		sw.addTableEntry(link.ip, link.mac, link.port)
 	}
 }
