@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
-from scapy.all import sendp, sniff, get_if_list, get_if_hwaddr
-from scapy.packet import Packet
+from scapy.all import sendp,  get_if_hwaddr, get_if_list
 from scapy.layers.l2 import Ether
-from scapy.layers.inet import IP, ICMP, UDP
+from scapy.layers.inet import IP, UDP
 import sys
 import socket
 from time import sleep, time
-import os
 
 
 def get_if():
-    ifs = get_if_list()
     iface = None  # "h1-eth0"
     for i in get_if_list():
         if "eth0" in i:
@@ -27,7 +24,7 @@ def main():
 
     if len(sys.argv) < 1:
         print('pass 1 arguments: <destination> ')
-        os.exit(1)
+        exit(1)
 
     addr = socket.gethostbyname(sys.argv[1])
     iface = get_if()

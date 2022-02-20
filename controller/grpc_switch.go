@@ -3,11 +3,8 @@ package main
 import (
 	"context"
 	"controller/pkg/client"
-	"controller/pkg/util/conversion"
 	"fmt"
-	"net"
 	"runtime"
-	"strconv"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -89,7 +86,6 @@ func (sw *GrpcSwitch) runSwitch(endCh chan struct{}) error {
 func (sw *GrpcSwitch) startRunner(endCh chan struct{}, conn *grpc.ClientConn) {
 	ticker := time.NewTicker(packetCheckRate)
 	sw.running = true
-	var err error
 	defer func() {
 		sw.running = false
 		sw.stopCh <- struct{}{}
@@ -103,7 +99,7 @@ func (sw *GrpcSwitch) startRunner(endCh chan struct{}, conn *grpc.ClientConn) {
 			sw.log.Debug("Reading counter")
 			sw.readCounter()
 			runtime.Gosched()
-		case err = <-sw.errCh:
+		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
 			go sw.reconnect(endCh)
 			return
@@ -172,16 +168,14 @@ func (sw *GrpcSwitch) readCounter() {
 	}
 }
 
-func (sw *GrpcSwitch) addTableEntry(ip string, port int) {
-	p, _ := conversion.UInt32ToBinaryCompressed(uint32(port))
-	ipv4 := net.ParseIP(ip).To4()
+func (sw *GrpcSwitch) addTableEntryBytes(ip []byte, mac []byte, port []byte) {
 	entry := sw.p4RtC.NewTableEntry(
 		"MyIngress.ipv4_lpm",
 		[]client.MatchInterface{&client.LpmMatch{
-			Value: ipv4,
+			Value: ip,
 			PLen:  32,
 		}},
-		sw.p4RtC.NewTableActionDirect("MyIngress.ipv4_forward", [][]byte{p}),
+		sw.p4RtC.NewTableActionDirect("MyIngress.ipv4_forward", [][]byte{mac, port}),
 		nil,
 	)
 	if err := sw.p4RtC.InsertTableEntry(entry); err != nil {
@@ -191,17 +185,15 @@ func (sw *GrpcSwitch) addTableEntry(ip string, port int) {
 	sw.log.Debugf("Added table entry to device")
 }
 
+// func (sw *GrpcSwitch) addTableEntry(ip string, mac string, port int) {
+// 	ip4, _ := conversion.IpToBinary(ip)
+// 	portBytes, _ := conversion.UInt32ToBinaryCompressed(uint32(port))
+// 	macBytes, _ := conversion.MacToBinary(mac)
+// 	sw.addTableEntryBytes(ip4, macBytes, portBytes)
+// }
+
 func (sw *GrpcSwitch) addConfig() {
-	sw.addTableEntry("10.0.1."+strconv.FormatUint(sw.id, 10), 1)
-	switch sw.id {
-	case 1:
-		sw.addTableEntry("10.0.1.2", 2)
-		sw.addTableEntry("10.0.1.4", 2)
-	case 2:
-		sw.addTableEntry("10.0.1.1", 2)
-		sw.addTableEntry("10.0.1.4", 3)
-	case 4:
-		sw.addTableEntry("10.0.1.2", 3)
-		sw.addTableEntry("10.0.1.1", 3)
+	for _, link := range GetLinksBytes(sw.id) {
+		sw.addTableEntryBytes(link.ip, link.mac, link.port)
 	}
 }

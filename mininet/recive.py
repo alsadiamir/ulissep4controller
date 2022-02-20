@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
-from scapy.all import sendp, sniff, get_if_list, get_if_hwaddr
-from scapy.packet import Packet
-from scapy.layers.l2 import Ether
-from scapy.layers.inet import IP, ICMP, UDP
+from scapy.all import sniff, get_if_list
 import sys
-import socket
 
 
 def get_if():
-    ifs = get_if_list()
     iface = None  # "h1-eth0"
     for i in get_if_list():
         if "eth0" in i:

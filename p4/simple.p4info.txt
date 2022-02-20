@@ -47,6 +47,11 @@ actions {
   }
   params {
     id: 1
+    name: "dstAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 2
     name: "port"
     bitwidth: 9
   }

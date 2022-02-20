@@ -19,3 +19,9 @@ make ctrl
 ```console
 h1 ./send.py 10.0.1.2
 ```
+
+### Useful links
+
+- https://github.com/antoninbas/p4runtime-go-client
+- https://gitlab.com/wild_boar/netprog_course/-/tree/master/P4lab/exercises/5_asymmetric_flow
+- https://gitlab.com/wild_boar/netprog_course/-/tree/master/P4lab/exercises/1_basic
