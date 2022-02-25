@@ -10,18 +10,9 @@ const PortId_t NUM_PORTS = 512;
 #define MAX_TRESHOLD 1000
 //microseconds
 #define WINDOW_SIZE 15000000
-#define BYTE_COUNT_WIDTH 48
-//#define PACKET_BYTE_COUNT_WIDTH (PACKET_COUNT_WIDTH + BYTE_COUNT_WIDTH)
-#define PACKET_BYTE_COUNT_WIDTH 80
 
-#define PACKET_COUNT_RANGE (PACKET_BYTE_COUNT_WIDTH-1):BYTE_COUNT_WIDTH
-#define BYTE_COUNT_RANGE (BYTE_COUNT_WIDTH-1):0
-
-#define FLOW_TABLE_SIZE_EACH 1024
 #define HASH_BASE 10w0
 #define HASH_MAX 10w1023
-typedef bit<PACKET_BYTE_COUNT_WIDTH> PacketByteCountState_t;
-
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -113,26 +104,25 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    //direct_counter(CounterType.packets) c;
+    register<bit<48>>(1024) pkt_count;
     register<bit<48>>(1024) last_seen;
-    register<bit<48>>(1024) window;
     register<bit<16>>(1024) treshold;
 
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
-    action update_packet_gap(bit<32> flow_id) {
+    action update_pkt_count(bit<32> flow_id) {
       bit<48> last_pkt_cnt;
       /* Get the time the previous packet was seen */
-      last_seen.read(last_pkt_cnt,flow_id);
+      pkt_count.read(last_pkt_cnt,flow_id);
       /* Update the register with the new timestamp */
-      last_seen.write((bit<32>)flow_id, last_pkt_cnt + 1);
+      pkt_count.write((bit<32>)flow_id, last_pkt_cnt + 1);
     }
 
-    action reset_flow(bit<32> flow,bit<32> flow_opp) {
-      last_seen.write((bit<32>)flow,0);
-      last_seen.write((bit<32>)flow_opp,0);
+    action reset_pkt_count(bit<32> flow,bit<32> flow_opp) {
+      pkt_count.write((bit<32>)flow,0);
+      pkt_count.write((bit<32>)flow_opp,0);
     }
 
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
@@ -146,7 +136,6 @@ control MyIngress(inout headers hdr,
         key = {
             hdr.ipv4.dstAddr: lpm;
         }
-        //counters = c;
         actions = {
             ipv4_forward;
             drop;
@@ -167,49 +156,46 @@ control MyIngress(inout headers hdr,
             bit<16> current_treshold;
             bit<48> diff_pkt_cnt;
 
-            hash(flow, HashAlgorithm.crc16, HASH_BASE,
-                {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
-            hash(flow_opp, HashAlgorithm.crc16, HASH_BASE,
-                {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
+            // compute flow index
+            hash(flow, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
+            hash(flow_opp, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
 
             // read flow values
-            window.read(last_time,flow);
+            last_seen.read(last_time,flow);
+            last_seen.write(flow,standard_metadata.ingress_global_timestamp);
             treshold.read(current_treshold,flow);
 
             // first time initialize
             if (last_time == (bit<48>)0) {
-                window.write(flow,standard_metadata.ingress_global_timestamp);
+                last_seen.write(flow,standard_metadata.ingress_global_timestamp);
                 last_time = standard_metadata.ingress_global_timestamp;
             }
-            // increase current treshold
             if (current_treshold == (bit<16>)0) {
                 treshold.write(flow,(bit<16>)200);
                 current_treshold = 200;
             }
 
-            // update flow timestamp
-            window.write(flow,standard_metadata.ingress_global_timestamp);
-
             // check window
             intertime = standard_metadata.ingress_global_timestamp - last_time;
             if (intertime > WINDOW_SIZE) {
-                reset_flow(flow,flow_opp);
+                reset_pkt_count(flow,flow_opp);
+                return;
             }
-            last_seen.read(last_pkt_cnt,flow);
-            last_seen.read(last_pkt_cnt_opp,flow_opp);
+            pkt_count.read(last_pkt_cnt,     flow);
+            pkt_count.read(last_pkt_cnt_opp, flow_opp);
             diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
 
             if (diff_pkt_cnt < (bit<48>)current_treshold) {
-                update_packet_gap(flow);
+                update_pkt_count(flow);
             } else {
-                // treshold is reached if you reach the max tresh
+                // treshold is reached if you reach the max drop
                 if(current_treshold > MAX_TRESHOLD){
                     digest<digest_t>(0, {flow, flow_opp, current_treshold});
                     drop();
                 } else {
                     //raise your treshold, and reset the flow
                     treshold.write(flow,current_treshold+200);
-                    reset_flow(flow,flow_opp);
+                    reset_pkt_count(flow,flow_opp);
                 }
             }
             ipv4_lpm.apply();
