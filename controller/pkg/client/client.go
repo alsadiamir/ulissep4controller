@@ -78,14 +78,6 @@ func (c *Client) Run(
 				return
 			}
 			if err != nil {
-				messageCh <- &p4_v1.StreamMessageResponse{
-					Update: &p4_v1.StreamMessageResponse_Error{
-						Error: &p4_v1.StreamError{
-							CanonicalCode: 1,
-							Message:       "Failed to receive stream message",
-						},
-					},
-				}
 				return
 			}
 			arbitration, ok := in.Update.(*p4_v1.StreamMessageResponse_Arbitration)
