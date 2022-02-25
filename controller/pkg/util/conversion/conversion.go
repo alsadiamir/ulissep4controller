@@ -9,7 +9,7 @@ import (
 func IpToBinary(ipStr string) ([]byte, error) {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		return nil, fmt.Errorf("Not a valid IP: %s", ipStr)
+		return nil, fmt.Errorf("not a valid IP: %s", ipStr)
 	}
 	return []byte(ip.To4()), nil
 }
@@ -39,6 +39,17 @@ func UInt32ToBinaryCompressed(i uint32) ([]byte, error) {
 	return []byte{'\x00'}, nil
 }
 
+func UInt64ToBinaryCompressed(i uint64) ([]byte, error) {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, i)
+	for idx := 0; idx < 8; idx++ {
+		if b[idx] != 0 {
+			return b[idx:], nil
+		}
+	}
+	return []byte{'\x00'}, nil
+}
+
 func ToCanonicalBytestring(bytes []byte) []byte {
 	if len(bytes) == 0 {
 		return bytes
@@ -54,4 +65,13 @@ func ToCanonicalBytestring(bytes []byte) []byte {
 		return bytes[:1]
 	}
 	return bytes[i:]
+}
+
+func BinaryCompressedToUint64(bytes []byte) uint64 {
+	buff := make([]byte, 8)
+	offset := 8 - len(bytes)
+	for idx, b := range bytes {
+		buff[offset+idx] = b
+	}
+	return binary.BigEndian.Uint64(buff)
 }

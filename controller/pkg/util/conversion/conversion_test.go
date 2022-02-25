@@ -42,3 +42,12 @@ func TestToCanonicalBytestring(t *testing.T) {
 		assert.Equal(t, tc.out, out)
 	}
 }
+
+func TestBinaryCompressedToUint64(t *testing.T) {
+	nums := []uint64{0, 64, 1024, 10240}
+	for _, n := range nums {
+		iCompressed, _ := UInt64ToBinaryCompressed(n)
+		iDecompress := BinaryCompressedToUint64(iCompressed)
+		assert.Equal(t, n, iDecompress)
+	}
+}
