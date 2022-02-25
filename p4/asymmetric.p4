@@ -54,9 +54,10 @@ struct headers {
 }
 
 struct digest_t {
-    bit<32> flow;
-    bit<32> flow_opp;
-    bit<16> treshold;
+    ip4Addr_t srcAddr;
+    ip4Addr_t dstAddr;
+    bit<9>    srcPort;
+    bit<9>    dstPort;
 }
 
 /*************************************************************************
@@ -106,7 +107,6 @@ control MyIngress(inout headers hdr,
 
     register<bit<48>>(1024) pkt_count;
     register<bit<48>>(1024) last_seen;
-    register<bit<16>>(1024) treshold;
 
     action drop() {
         mark_to_drop(standard_metadata);
@@ -115,12 +115,12 @@ control MyIngress(inout headers hdr,
     action update_pkt_count(bit<32> flow_id) {
       bit<48> last_pkt_cnt;
       /* Get the time the previous packet was seen */
-      pkt_count.read(last_pkt_cnt,flow_id);
+      pkt_count.read(last_pkt_cnt, flow_id);
       /* Update the register with the new timestamp */
       pkt_count.write((bit<32>)flow_id, last_pkt_cnt + 1);
     }
 
-    action reset_pkt_count(bit<32> flow,bit<32> flow_opp) {
+    action reset_pkt_count(bit<32> flow, bit<32> flow_opp) {
       pkt_count.write((bit<32>)flow,0);
       pkt_count.write((bit<32>)flow_opp,0);
     }
@@ -147,32 +147,28 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv4.isValid()) {
+            ipv4_lpm.apply();
+
             bit<32> flow;
             bit<32> flow_opp;
             bit<48> last_pkt_cnt;
             bit<48> last_pkt_cnt_opp;
 	        bit<48> last_time;
 	        bit<48> intertime;
-            bit<16> current_treshold;
             bit<48> diff_pkt_cnt;
 
             // compute flow index
-            hash(flow, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
+            hash(flow,     HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
             hash(flow_opp, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
 
             // read flow values
             last_seen.read(last_time,flow);
             last_seen.write(flow,standard_metadata.ingress_global_timestamp);
-            treshold.read(current_treshold,flow);
 
             // first time initialize
             if (last_time == (bit<48>)0) {
                 last_seen.write(flow,standard_metadata.ingress_global_timestamp);
                 last_time = standard_metadata.ingress_global_timestamp;
-            }
-            if (current_treshold == (bit<16>)0) {
-                treshold.write(flow,(bit<16>)200);
-                current_treshold = 200;
             }
 
             // check window
@@ -185,20 +181,12 @@ control MyIngress(inout headers hdr,
             pkt_count.read(last_pkt_cnt_opp, flow_opp);
             diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
 
-            if (diff_pkt_cnt < (bit<48>)current_treshold) {
+            if (diff_pkt_cnt < (bit<48>)TRESHOLD) {
                 update_pkt_count(flow);
             } else {
-                // treshold is reached if you reach the max drop
-                if(current_treshold > MAX_TRESHOLD){
-                    digest<digest_t>(0, {flow, flow_opp, current_treshold});
+                    digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec});
                     drop();
-                } else {
-                    //raise your treshold, and reset the flow
-                    treshold.write(flow,current_treshold+200);
-                    reset_pkt_count(flow,flow_opp);
-                }
             }
-            ipv4_lpm.apply();
         }
     }
 }
