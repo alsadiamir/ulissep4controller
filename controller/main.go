@@ -21,6 +21,7 @@ const (
 	packetCounter    = "MyIngress.port_packets_in"
 	packetCountWarn  = 20
 	packetCheckRate  = 5 * time.Second
+	digestName       = "digest_t"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 	flag.IntVar(&nDevices, "n", 1, "Number of devices")
 	var verbose bool
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
+	var trace bool
+	flag.BoolVar(&trace, "trace", false, "Enable trace mode with log messages")
 	var binPath string
 	flag.StringVar(&binPath, "bin", "", "Path to P4 bin (not needed for bmv2 simple_switch_grpc)")
 	var p4infoPath string
@@ -36,6 +39,9 @@ func main() {
 
 	if verbose {
 		log.SetLevel(log.DebugLevel)
+	}
+	if trace {
+		log.SetLevel(log.TraceLevel)
 	}
 	log.Infof("Starting %d devices", nDevices)
 
@@ -72,5 +78,5 @@ func main() {
 	<-signalCh
 	fmt.Println()
 	cancel()
-	time.Sleep(defaultWait)
+	time.Sleep(defaultWait * time.Duration(nDevices))
 }

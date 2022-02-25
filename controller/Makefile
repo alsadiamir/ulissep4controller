@@ -1,6 +1,8 @@
+p4program = asymmetric
+
 all: ctrl
 ctrl:
-	go run . -n 3 -verbose -bin ../p4/simple.json -p4info ../p4/simple.p4info.txt
+	go run . -n 3 -bin ../p4/$(p4program).json -p4info ../p4/$(p4program).p4info.txt -trace
 prod:
-	go run . -n 3 -bin ../p4/simple.json -p4info ../p4/simple.p4info.txt
+	go run . -n 3 -bin ../p4/$(p4program).json -p4info ../p4/$(p4program).p4info.txt
 

@@ -57,28 +57,48 @@ func (sw *GrpcSwitch) runSwitch() error {
 	sw.log.Infof("Connected, runtime version: %s", resp.P4RuntimeApiVersion)
 	// create runtime client
 	electionID := p4_v1.Uint128{High: 0, Low: 1}
-	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 100)
+	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 1000)
+	arbitrationCh := make(chan bool)
 	sw.p4RtC = client.NewClient(c, sw.id, electionID)
-	go sw.p4RtC.Run(sw.ctx, make(chan bool), sw.messageCh)
+	go sw.p4RtC.Run(sw.ctx, arbitrationCh, sw.messageCh)
+	// check primary
+	for isPrimary := range arbitrationCh {
+		if isPrimary {
+			log.Debug("We are the primary client!")
+			break
+		} else {
+			return fmt.Errorf("we are not the primary client")
+		}
+	}
 	// set pipeline config
 	time.Sleep(defaultWait)
 	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
+	//
+	digestConfig := &p4_v1.DigestEntry_Config{
+		MaxTimeoutNs: 0,
+		MaxListSize:  1,
+		AckTimeoutNs: time.Second.Nanoseconds() * 1000,
+	}
+	if err := sw.p4RtC.EnableDigest(digestName, digestConfig); err != nil {
+		return fmt.Errorf("cannot enable digest %s", digestName)
+	}
+	sw.log.Debugf("Enabled digest %s", digestName)
 
 	sw.errCh = make(chan error, 1)
 	sw.addConfig()
-	go sw.handleStreamMessages()
-	go sw.startRunner(conn)
+	go sw.handleStreamMessages(conn)
+	go sw.startRunner()
 
+	sw.log.Debug("Switch configured")
 	return nil
 }
 
-func (sw *GrpcSwitch) startRunner(conn *grpc.ClientConn) {
+func (sw *GrpcSwitch) startRunner() {
 	defer func() {
 		close(sw.messageCh)
-		conn.Close()
 		sw.log.Info("Stopping")
 	}()
 	// handle ticker
@@ -86,7 +106,7 @@ func (sw *GrpcSwitch) startRunner(conn *grpc.ClientConn) {
 	for {
 		select {
 		case <-ticker.C:
-			sw.readCounter()
+			//sw.readCounter()
 		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
 			go sw.reconnect()
@@ -114,22 +134,44 @@ func (sw *GrpcSwitch) reconnect() {
 	}
 }
 
+func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
+	for _, digestData := range digestList.Data {
+		s := digestData.GetStruct()
+		flow := s.Members[0].GetBitstring()
+		flowOpp := s.Members[1].GetBitstring()
+		treshold := s.Members[2].GetBitstring()
+		sw.log.WithFields(log.Fields{
+			"flow":     flow,
+			"flow opp": flowOpp,
+			"treshold": treshold,
+		}).Debug()
+	}
+	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
+		sw.errCh <- err
+	}
+	sw.log.Trace("Ack digest list")
+}
+
 // not used so no error handling
-func (sw *GrpcSwitch) handleStreamMessages() {
+func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
+	defer conn.Close()
 	for message := range sw.messageCh {
-		switch message.Update.(type) {
+		switch m := message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:
-			sw.log.Debugf("Received Packetin")
+			sw.log.Debug("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
-			sw.log.Debugf("Received DigestList")
+			sw.log.Trace("Received DigestList")
+			sw.handleDigest(m.Digest)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
-			sw.log.Debugf("Received IdleTimeoutNotification")
+			sw.log.Debug("Received IdleTimeoutNotification")
 		case *p4_v1.StreamMessageResponse_Error:
-			sw.log.Errorf("Received StreamError")
+			sw.log.Debug("Received StreamError")
 		default:
-			sw.log.Errorf("Received unknown stream message")
+			sw.log.Debug("Received unknown stream message")
 		}
 	}
+	sw.log.Trace("Closed message channel")
+	time.Sleep(defaultWait)
 }
 
 func (sw *GrpcSwitch) readCounter() {

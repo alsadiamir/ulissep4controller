@@ -18,7 +18,8 @@
         "-p4info",
         "../p4/simple.p4info.txt",
         "-verbose"
-      ]
+      ],
+      "console": "integratedTerminal"
     }
   ]
 }
