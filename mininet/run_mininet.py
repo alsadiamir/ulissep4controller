@@ -14,7 +14,7 @@ from p4_mininet import P4GrpcSwitch, P4Host
 
 class TopoRunner:
 
-    def __init__(self, topo_file, switch_json, bmv2_exe='simple_switch_grpc'):
+    def __init__(self, topo_file, switch_json, bmv2_exe):
         """ Initializes some attributes and reads the topology json. Does not
             actually run the exercise. Use run_exercise() for that.
 
@@ -136,7 +136,7 @@ def main():
         print("Error while compiling!")
         sys.exit()
 
-    runner = TopoRunner("topology.json", p4json)
+    runner = TopoRunner("topology.json", p4json, 'simple_switch_grpc')
     runner.run_topology()
 
 

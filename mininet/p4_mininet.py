@@ -80,6 +80,8 @@ class P4GrpcSwitch(Switch):
         self.grpc_port = grpc_port
         self.cpu_port = cpu_port
         self.device_id = device_id
+        self.cert_file = "/tmp/cert.pem"
+        self.key_file = "/tmp/key.pem"
 
     @classmethod
     def setup(cls):
@@ -100,8 +102,12 @@ class P4GrpcSwitch(Switch):
             args.append(self.json_path)
         else:
             args.append("--no-p4")
+
         if self.grpc_port:
-            args.append("-- --grpc-server-addr 0.0.0.0:"+str(self.grpc_port)+" --cpu-port "+self.cpu_port)
+            grpc_args = ["--", "--grpc-server-addr", "0.0.0.0:"+str(self.grpc_port), "--cpu-port", self.cpu_port]
+            grpc_args.extend(["--grpc-server-ssl", "--grpc-server-cert",
+                             self.cert_file, "--grpc-server-key", self.key_file])
+            args.extend(grpc_args)
 
         info(' '.join(args))
         self.cmd(' '.join(args) + ' > log/%s.log 2>&1 &' % self.name)

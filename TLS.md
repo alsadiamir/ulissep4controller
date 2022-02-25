@@ -7,7 +7,6 @@ Compile from source PI/bmv2
 1.  Follow instructions in the [PI README](https://github.com/p4lang/PI#dependencies) to configure dependencies
 1.  Configure, build and install PI:
     ```
-    git apply ulissep4controller/PI.patch
     ./autogen.sh
     ./configure --with-proto --without-internal-rpc --without-cli --without-bmv2
     make -j$(nproc)
@@ -38,3 +37,7 @@ Compile from source PI/bmv2
 - compilation error, solution --without-thrift
 - try different version of grpc, why ssl and tls are compatible?
 - was submitted a commit to pi that made ssl available, a fix is needed
+
+## Endnote
+
+After the reasearch the dev team at p4 implemented native support for tls
