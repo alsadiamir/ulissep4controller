@@ -1,15 +1,12 @@
 /* -*- P4_16 -*- */
-/* Copyright 2019 Belma Turkovic*/
-/* TU Delft Embedded and Networked Systems Group.*/
-
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV4 = 0x800;
-const bit<8>  TYPE_TCP  = 6;
-const bit<16> TYPE_MYTUNNEL = 0x1212;
-
 #define CPU_PORT 255
+
+const bit<16> TYPE_IPV4 = 0x800;
+const bit<32> NUM_PORTS = 4;
+
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -39,44 +36,18 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
-header myTunnel_t {
-    bit<16> proto_id;
-    bit<16> dst_id;
-    bit<16> nhop;
-    bit<48> ts_ing1;
-    bit<48> ts_eg1;
-    bit<48> ts_is2;
-    bit<48> ts_es2;
-    bit<48> ts_ing2;
-    bit<48> ts_eg2;
-}
-
-header tcp_t{
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4>  dataOffset;
-    bit<4>  res;
-    bit<1>  cwr;
-    bit<1>  ece;
-    bit<1>  urg;
-    bit<1>  ack;
-    bit<1>  psh;
-    bit<1>  rst;
-    bit<1>  syn;
-    bit<1>  fin;
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
-}
-
 struct metadata {
+    /* empty */
+}
+
+struct L2_digest {
+    macAddr_t smac;
+    egressSpec_t ig_port;
 }
 
 @controller_header("packet_in")
 header packet_in_t {
-    bit<16> ingress_port;
+    macAddr_t dstAddr;
 }
 
 @controller_header("packet_out")
@@ -88,10 +59,8 @@ struct headers {
     packet_in_t  packetin;
     packet_out_t packetout;
     ethernet_t   ethernet;
-    myTunnel_t  myTunnel;
     ipv4_t       ipv4;
 }
-
 
 /*************************************************************************
 *********************** P A R S E R  ***********************************
@@ -117,15 +86,6 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-            TYPE_MYTUNNEL: parse_myTunnel;
-            TYPE_IPV4: parse_ipv4;
-            default: accept;
-        }
-    }
-
-    state parse_myTunnel {
-        packet.extract(hdr.myTunnel);
-        transition select(hdr.myTunnel.proto_id) {
             TYPE_IPV4: parse_ipv4;
             default: accept;
         }
@@ -154,14 +114,22 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
+    counter(NUM_PORTS, CounterType.packets) port_packets_in;
 
     action drop() {
         mark_to_drop(standard_metadata);
     }
+
+    action send_digest() {
+        digest<L2_digest>(1, {hdr.ethernet.srcAddr, standard_metadata.ingress_port});
+    }
     
-    action ipv4_forward(egressSpec_t port) {
+    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        digest<L2_digest>(1, {hdr.ethernet.srcAddr, standard_metadata.ingress_port});
     }
     
     table ipv4_lpm {
@@ -172,47 +140,21 @@ control MyIngress(inout headers hdr,
             ipv4_forward;
             drop;
             NoAction;
+            send_digest;
         }
         size = 1024;
-        default_action = drop();
-    }
-
-    action myTunnel_forward(egressSpec_t port) {
-      standard_metadata.egress_spec = port;
-      hdr.myTunnel.dst_id = (bit<16>)port;
-    }
-
-    table myTunnel_exact {
-        key = {
-            standard_metadata.ingress_port: exact;
-        }
-        actions = {
-            myTunnel_forward;
-            drop;
-        }
-        size = 1024;
-        default_action = drop();
+        support_timeout = true;
+        default_action = send_digest();
     }
     
     apply {
-
-        if (hdr.ipv4.isValid() && standard_metadata.ingress_port!=5) {
+        port_packets_in.count((bit<32>) standard_metadata.ingress_port);
+        if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
         }
-
-        if (hdr.myTunnel.isValid() && standard_metadata.ingress_port!=5) {
-            hdr.myTunnel.nhop = hdr.myTunnel.nhop + 1;
-            myTunnel_exact.apply();
-        }
-
-        if (standard_metadata.ingress_port == CPU_PORT) { // packet out
-            standard_metadata.egress_spec = (bit<9>)hdr.packetout.egress_spec;
-            hdr.packetout.setInvalid();
-        }
-
-        if (standard_metadata.egress_spec == CPU_PORT) { // packet in
+        if (standard_metadata.egress_spec == CPU_PORT) { 
             hdr.packetin.setValid();
-            hdr.packetin.ingress_port = (bit<16>)standard_metadata.ingress_port;
+            hdr.packetin.dstAddr = hdr.ethernet.dstAddr;
         }
     }
 }
@@ -224,24 +166,7 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-     apply {
-         if (hdr.myTunnel.isValid()) {
-             if (hdr.myTunnel.nhop >= 1) {
-                 if (hdr.myTunnel.nhop == 1) {
-                      hdr.myTunnel.ts_ing1 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_eg1 = standard_metadata.egress_global_timestamp;
-                 }
-                 if (hdr.myTunnel.nhop == 2) {
-                      hdr.myTunnel.ts_is2 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_es2 = standard_metadata.egress_global_timestamp;
-                 }
-                 if (hdr.myTunnel.nhop == 3) {
-                      hdr.myTunnel.ts_ing2 = standard_metadata.ingress_global_timestamp;
-                      hdr.myTunnel.ts_eg2 = standard_metadata.egress_global_timestamp;
-                 }
-             }
-         }
-     }
+    apply {  }
 }
 
 /*************************************************************************
@@ -249,20 +174,20 @@ control MyEgress(inout headers hdr,
 *************************************************************************/
 
 control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
-    apply {
-        update_checksum(
-            hdr.ipv4.isValid(),
-                { hdr.ipv4.version,
-                  hdr.ipv4.ihl,
-                  hdr.ipv4.diffserv,
-                  hdr.ipv4.totalLen,
-                  hdr.ipv4.identification,
-                  hdr.ipv4.flags,
-                  hdr.ipv4.fragOffset,
-                  hdr.ipv4.ttl,
-                  hdr.ipv4.protocol,
-                  hdr.ipv4.srcAddr,
-                  hdr.ipv4.dstAddr },
+     apply {
+	update_checksum(
+	    hdr.ipv4.isValid(),
+            { hdr.ipv4.version,
+	      hdr.ipv4.ihl,
+              hdr.ipv4.diffserv,
+              hdr.ipv4.totalLen,
+              hdr.ipv4.identification,
+              hdr.ipv4.flags,
+              hdr.ipv4.fragOffset,
+              hdr.ipv4.ttl,
+              hdr.ipv4.protocol,
+              hdr.ipv4.srcAddr,
+              hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
     }
@@ -274,7 +199,9 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
-        packet.emit(hdr);
+        packet.emit(hdr.packetin);
+        packet.emit(hdr.ethernet);
+        packet.emit(hdr.ipv4);
     }
 }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	log "github.com/sirupsen/logrus"
 	code "google.golang.org/genproto/googleapis/rpc/code"
 
 	p4_config_v1 "github.com/p4lang/p4runtime/go/p4/config/v1"
@@ -56,16 +55,19 @@ func NewClient(
 	}
 }
 
+func (c *Client) GetDeviceId() uint64 {
+	return c.deviceID
+}
+
 func (c *Client) Run(
-	stopCh <-chan struct{},
+	ctx context.Context,
 	arbitrationCh chan<- bool,
 	messageCh chan<- *p4_v1.StreamMessageResponse, // all other stream messages besides arbitration
 ) error {
-	stream, err := c.StreamChannel(context.Background())
+	stream, err := c.StreamChannel(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot establish stream: %v", err)
 	}
-
 	defer stream.CloseSend()
 
 	go func() {
@@ -76,7 +78,15 @@ func (c *Client) Run(
 				return
 			}
 			if err != nil {
-				log.Fatalf("Failed to receive a stream message : %v", err)
+				messageCh <- &p4_v1.StreamMessageResponse{
+					Update: &p4_v1.StreamMessageResponse_Error{
+						Error: &p4_v1.StreamError{
+							CanonicalCode: 1,
+							Message:       "Failed to receive stream message",
+						},
+					},
+				}
+				return
 			}
 			arbitration, ok := in.Update.(*p4_v1.StreamMessageResponse_Arbitration)
 			if !ok {
@@ -106,7 +116,7 @@ func (c *Client) Run(
 		select {
 		case m := <-c.streamSendCh:
 			stream.Send(m)
-		case <-stopCh:
+		case <-ctx.Done():
 			return nil
 		}
 	}
@@ -183,27 +193,14 @@ func (c *Client) ReadEntityWildcard(entity *p4_v1.Entity, readEntityCh chan<- *p
 	return nil
 }
 
-func (p4RtC *Client) SendPacketOut(pkt []byte, port []byte) error {
-	/*
-		md := &p4_v1.PacketMetadata{
-			MetadataId: 1,
-			Value:      []byte{0x00, 0x00},
-		}
-	*/
+func (p4RtC *Client) SendPacketOut(payload []byte, metadata []*p4_v1.PacketMetadata) error {
 
 	m := &p4_v1.StreamMessageRequest{
 		Update: &p4_v1.StreamMessageRequest_Packet{Packet: &p4_v1.PacketOut{
-			Payload: pkt,
-			Metadata: []*p4_v1.PacketMetadata{
-				{
-					MetadataId: 1,
-					Value:      port,
-				},
-			},
+			Payload:  payload,
+			Metadata: metadata,
 		}},
 	}
-
-	fmt.Printf("PacketOUT = %s\n", m)
 
 	p4RtC.streamSendCh <- m
 	return nil

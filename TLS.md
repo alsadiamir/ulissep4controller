@@ -37,3 +37,4 @@ Compile from source PI/bmv2
 - [created cert.go to generate certificates](https://github.com/alsadiamir/ulissep4controller/blob/main/cert/cert.go)
 - compilation error, solution --without-thrift
 - try different version of grpc, why ssl and tls are compatible?
+- was submitted a commit to pi that made ssl available, a fix is needed

@@ -2,15 +2,26 @@
 
 ## How to run it
 
-1) On one terminal: 
+1. Start mininet
+
 ```console
-foo@bar:~$ make topo
+make topo
 ```
-2) On another terminal: 
+
+2. Start the controller (in another terminal)
+
 ```console
-foo@bar:~$ make controller2
+make ctrl
 ```
-3) On another terminal: 
+
+3. Start sending packets (from mininet)
+
 ```console
-foo@bar:~$ make controller1
+h1 ./send.py 10.0.1.2
 ```
+
+### Useful links
+
+- https://github.com/antoninbas/p4runtime-go-client
+- https://gitlab.com/wild_boar/netprog_course/-/tree/master/P4lab/exercises/5_asymmetric_flow
+- https://gitlab.com/wild_boar/netprog_course/-/tree/master/P4lab/exercises/1_basic

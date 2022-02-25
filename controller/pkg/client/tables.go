@@ -222,7 +222,6 @@ func (c *Client) NewTableEntry(
 	}
 
 	//nolint:staticcheck // SA5011 if mfs==nil then for loop is not executed by default
-	//lint:ignore SA5011 This line added for support golint version of VSC
 	for idx, mf := range mfs {
 		entry.Match = append(entry.Match, mf.get(uint32(idx+1), c.CanonicalBytestrings))
 	}
