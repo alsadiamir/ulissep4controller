@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	log "github.com/sirupsen/logrus"
 	code "google.golang.org/genproto/googleapis/rpc/code"
 
 	p4_config_v1 "github.com/p4lang/p4runtime/go/p4/config/v1"
@@ -65,7 +64,7 @@ func (c *Client) Run(
 	arbitrationCh chan<- bool,
 	messageCh chan<- *p4_v1.StreamMessageResponse, // all other stream messages besides arbitration
 ) error {
-	stream, err := c.StreamChannel(context.Background())
+	stream, err := c.StreamChannel(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot establish stream: %v", err)
 	}
@@ -79,7 +78,15 @@ func (c *Client) Run(
 				return
 			}
 			if err != nil {
-				log.Fatalf("Failed to receive a stream message : %v", err)
+				messageCh <- &p4_v1.StreamMessageResponse{
+					Update: &p4_v1.StreamMessageResponse_Error{
+						Error: &p4_v1.StreamError{
+							CanonicalCode: 1,
+							Message:       "Failed to receive stream message",
+						},
+					},
+				}
+				return
 			}
 			arbitration, ok := in.Update.(*p4_v1.StreamMessageResponse_Arbitration)
 			if !ok {

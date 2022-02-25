@@ -14,9 +14,9 @@
         "-n",
         "1",
         "-bin",
-        "../p4/simple.json",
+        "../p4/asymmetric.json",
         "-p4info",
-        "../p4/simple.p4info.txt",
+        "../p4/asymmetric.p4info.txt",
         "-verbose"
       ],
       "console": "integratedTerminal"

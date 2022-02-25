@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"controller/pkg/client"
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -139,7 +140,14 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 		s := digestData.GetStruct()
 		flow := s.Members[0].GetBitstring()
 		flowOpp := s.Members[1].GetBitstring()
-		treshold := s.Members[2].GetBitstring()
+		tmp := s.Members[2].GetBitstring()
+		var zero_byte byte = 0
+		var treshold uint16
+		if len(tmp) == 1 {
+			treshold = binary.BigEndian.Uint16([]byte{zero_byte, tmp[0]})
+		} else {
+			treshold = binary.BigEndian.Uint16(tmp)
+		}
 		sw.log.WithFields(log.Fields{
 			"flow":     flow,
 			"flow opp": flowOpp,
@@ -165,7 +173,8 @@ func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Debug("Received IdleTimeoutNotification")
 		case *p4_v1.StreamMessageResponse_Error:
-			sw.log.Debug("Received StreamError")
+			sw.log.Trace("Received StreamError")
+			sw.errCh <- fmt.Errorf("StreamError: %v", m.Error)
 		default:
 			sw.log.Debug("Received unknown stream message")
 		}

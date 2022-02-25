@@ -51,7 +51,7 @@ header ipv4_t {
     ip4Addr_t srcAddr;
     ip4Addr_t dstAddr;
     ip4Addr_t realsrcAddr;
-    ip4Addr_t realdstAddr;    
+    ip4Addr_t realdstAddr;
 }
 
 struct metadata {
@@ -100,7 +100,7 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply {  }
 }
 
@@ -112,7 +112,7 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-    
+
     //direct_counter(CounterType.packets) c;
     register<bit<48>>(1024) last_seen;
     register<bit<48>>(1024) window;
@@ -134,14 +134,14 @@ control MyIngress(inout headers hdr,
       last_seen.write((bit<32>)flow,0);
       last_seen.write((bit<32>)flow_opp,0);
     }
-    
+
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
-    
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -155,11 +155,11 @@ control MyIngress(inout headers hdr,
         size = 1024;
         default_action = NoAction();
     }
-    
+
     apply {
-        if (hdr.ipv4.isValid()) {    
+        if (hdr.ipv4.isValid()) {
             bit<32> flow;
-            bit<32> flow_opp;      
+            bit<32> flow_opp;
             bit<48> last_pkt_cnt;
             bit<48> last_pkt_cnt_opp;
 	        bit<48> last_time;
@@ -171,15 +171,12 @@ control MyIngress(inout headers hdr,
                 {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
             hash(flow_opp, HashAlgorithm.crc16, HASH_BASE,
                 {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
-            digest<digest_t>(0, {flow, flow_opp, (bit<16>)0});      
 
             // read flow values
             window.read(last_time,flow);
             treshold.read(current_treshold,flow);
 
-
-            
-            // first time initialize 
+            // first time initialize
             if (last_time == (bit<48>)0) {
                 window.write(flow,standard_metadata.ingress_global_timestamp);
                 last_time = standard_metadata.ingress_global_timestamp;
@@ -189,7 +186,7 @@ control MyIngress(inout headers hdr,
                 treshold.write(flow,(bit<16>)200);
                 current_treshold = 200;
             }
-            
+
             // update flow timestamp
             window.write(flow,standard_metadata.ingress_global_timestamp);
 
@@ -207,14 +204,15 @@ control MyIngress(inout headers hdr,
             } else {
                 // treshold is reached if you reach the max tresh
                 if(current_treshold > MAX_TRESHOLD){
+                    digest<digest_t>(0, {flow, flow_opp, current_treshold});
                     drop();
                 } else {
-                    //raise your treshold, and reset the flow 
+                    //raise your treshold, and reset the flow
                     treshold.write(flow,current_treshold+200);
                     reset_flow(flow,flow_opp);
                 }
             }
-            ipv4_lpm.apply(); 
+            ipv4_lpm.apply();
         }
     }
 }

@@ -17,16 +17,20 @@ const (
 	defaultAddr      = "127.0.0.1"
 	defaultWait      = 250 * time.Millisecond
 	reconnectTimeout = 5 * time.Second
-	maxRetry         = 3
 	packetCounter    = "MyIngress.port_packets_in"
 	packetCountWarn  = 20
 	packetCheckRate  = 5 * time.Second
 	digestName       = "digest_t"
 )
 
+var (
+	maxRetry int
+)
+
 func main() {
 	var nDevices int
 	flag.IntVar(&nDevices, "n", 1, "Number of devices")
+	flag.IntVar(&maxRetry, "retry", 0, "Number of times retry to connect")
 	var verbose bool
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
 	var trace bool
