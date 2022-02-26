@@ -212,7 +212,7 @@ func (c *Client) NewTableEntry(
 	action *p4_v1.TableAction,
 	options *TableEntryOptions,
 ) *p4_v1.TableEntry {
-	tableID := c.tableId(table)
+	tableID := c.TableId(table)
 
 	entry := &p4_v1.TableEntry{
 		TableId: tableID,
@@ -231,6 +231,25 @@ func (c *Client) NewTableEntry(
 	}
 
 	return entry
+}
+
+func (c *Client) SafeInsertTableEntry(entry *p4_v1.TableEntry) error {
+	if _, err := c.ReadEntitySingle(&p4_v1.Entity{
+		Entity: &p4_v1.Entity_TableEntry{
+			TableEntry: entry,
+		},
+	}); err == nil {
+		// if entry is already present don't do anything
+		return nil
+	}
+	update := &p4_v1.Update{
+		Type: p4_v1.Update_INSERT,
+		Entity: &p4_v1.Entity{
+			Entity: &p4_v1.Entity_TableEntry{TableEntry: entry},
+		},
+	}
+
+	return c.WriteUpdate(update)
 }
 
 func (c *Client) InsertTableEntry(entry *p4_v1.TableEntry) error {

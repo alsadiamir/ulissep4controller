@@ -110,6 +110,7 @@ control MyIngress(inout headers hdr,
 
     action drop() {
         mark_to_drop(standard_metadata);
+        exit;
     }
 
     action update_pkt_count(bit<32> flow_id) {
@@ -132,6 +133,12 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
+    action send_digest() {
+        //digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec});
+        // inverted idk why
+        digest<digest_t>(0, {hdr.ipv4.dstAddr, hdr.ipv4.srcAddr, standard_metadata.egress_spec ,standard_metadata.ingress_port});
+    }
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -142,12 +149,27 @@ control MyIngress(inout headers hdr,
             NoAction;
         }
         size = 1024;
+        support_timeout = true;
+        default_action = drop();
+    }
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
         default_action = NoAction();
     }
 
     apply {
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
+            ipv4_drop.apply();
 
             bit<32> flow;
             bit<32> flow_opp;
@@ -184,8 +206,7 @@ control MyIngress(inout headers hdr,
             if (diff_pkt_cnt < (bit<48>)TRESHOLD) {
                 update_pkt_count(flow);
             } else {
-                    digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec});
-                    drop();
+                send_digest();
             }
         }
     }

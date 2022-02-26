@@ -6,7 +6,7 @@ import (
 
 const invalidID = 0
 
-func (c *Client) tableId(name string) uint32 {
+func (c *Client) TableId(name string) uint32 {
 	if c.p4Info == nil {
 		return invalidID
 	}

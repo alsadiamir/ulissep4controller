@@ -64,7 +64,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	// check primary
 	for isPrimary := range arbitrationCh {
 		if isPrimary {
-			log.Debug("We are the primary client!")
+			log.Trace("we are the primary client")
 			break
 		} else {
 			return fmt.Errorf("we are not the primary client")
@@ -136,6 +136,6 @@ func (sw *GrpcSwitch) reconnect() {
 
 func (sw *GrpcSwitch) addConfig() {
 	for _, link := range GetLinksBytes(sw.id) {
-		sw.addTableEntry(link.ip, link.mac, link.port)
+		sw.addIpv4Lpm(link.ip, link.mac, link.port)
 	}
 }
