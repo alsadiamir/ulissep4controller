@@ -72,10 +72,14 @@ func (sw *GrpcSwitch) runSwitch() error {
 	}
 	// set pipeline config
 	time.Sleep(defaultWait)
-	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
+	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
+	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
+		return err
+	}
+	sw.log.Debug("Commited forward pipe config")
 	//
 	digestConfig := &p4_v1.DigestEntry_Config{
 		MaxTimeoutNs: 0,

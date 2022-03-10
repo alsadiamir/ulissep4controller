@@ -19,7 +19,7 @@ type FwdPipeConfig struct {
 	Cookie         uint64
 }
 
-func (c *Client) SetFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64) (*FwdPipeConfig, error) {
+func (c *Client) setFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64, action p4_v1.SetForwardingPipelineConfigRequest_Action) (*FwdPipeConfig, error) {
 	p4Info := &p4_config_v1.P4Info{}
 	if err := proto.UnmarshalText(string(p4infoBytes), p4Info); err != nil {
 		return nil, fmt.Errorf("failed to decode P4Info Protobuf message: %v", err)
@@ -35,7 +35,7 @@ func (c *Client) SetFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64
 	req := &p4_v1.SetForwardingPipelineConfigRequest{
 		DeviceId:   c.deviceID,
 		ElectionId: &c.electionID,
-		Action:     p4_v1.SetForwardingPipelineConfigRequest_VERIFY_AND_COMMIT,
+		Action:     action,
 		Config:     config,
 	}
 	_, err := c.SetForwardingPipelineConfig(context.Background(), req)
@@ -49,6 +49,25 @@ func (c *Client) SetFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64
 	}
 
 	return nil, err
+}
+
+func (c *Client) SetFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64) (*FwdPipeConfig, error) {
+	return c.setFwdPipeFromBytes(binBytes, p4infoBytes, cookie, p4_v1.SetForwardingPipelineConfigRequest_VERIFY_AND_COMMIT)
+}
+
+func (c *Client) SaveFwdPipeFromBytes(binBytes, p4infoBytes []byte, cookie uint64) (*FwdPipeConfig, error) {
+	return c.setFwdPipeFromBytes(binBytes, p4infoBytes, cookie, p4_v1.SetForwardingPipelineConfigRequest_VERIFY_AND_SAVE)
+}
+
+func (c *Client) CommitFwdPipe() error {
+	req := &p4_v1.SetForwardingPipelineConfigRequest{
+		DeviceId:   c.deviceID,
+		ElectionId: &c.electionID,
+		Action:     p4_v1.SetForwardingPipelineConfigRequest_COMMIT,
+	}
+	_, err := c.SetForwardingPipelineConfig(context.Background(), req)
+
+	return err
 }
 
 func (c *Client) SetFwdPipe(binPath string, p4infoPath string, cookie uint64) (*FwdPipeConfig, error) {
