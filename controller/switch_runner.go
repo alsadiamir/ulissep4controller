@@ -139,7 +139,8 @@ func (sw *GrpcSwitch) reconnect() {
 }
 
 func (sw *GrpcSwitch) addConfig() {
-	for _, link := range GetLinksBytes(sw.id) {
+	links := GetDefaultLinks(sw.id)
+	for _, link := range GetLinksBytes(links) {
 		sw.addIpv4Lpm(link.ip, link.mac, link.port)
 	}
 }

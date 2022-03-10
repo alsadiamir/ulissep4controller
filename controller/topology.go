@@ -80,10 +80,10 @@ func parseRoutes(fileName string, swName string) []string {
 	return routes[swName]
 }
 
-func GetLinks(id uint64) []Link {
+func GetLinks(id uint64, topoFile string, routeFile string) []Link {
 	swName := "s" + strconv.FormatUint(id, 10)
-	hosts := parseHosts("../mininet/topology.json")
-	routes := parseRoutes("routes.json", swName)
+	hosts := parseHosts(topoFile)
+	routes := parseRoutes(routeFile, swName)
 	links := make([]Link, 0, 4)
 	// foreach link
 	for idx, route := range routes {
@@ -101,11 +101,14 @@ func GetLinks(id uint64) []Link {
 	return links
 }
 
-func GetLinksBytes(id uint64) []LinkBytes {
-	linkString := GetLinks(id)
-	links := make([]LinkBytes, len(linkString))
-	for idx, link := range GetLinks(id) {
-		links[idx] = link.toBytes()
+func GetDefaultLinks(id uint64) []Link {
+	return GetLinks(id, "../mininet/topology.json", "routes.json")
+}
+
+func GetLinksBytes(links []Link) []LinkBytes {
+	linksByte := make([]LinkBytes, len(links))
+	for idx, link := range links {
+		linksByte[idx] = link.toBytes()
 	}
-	return links
+	return linksByte
 }
