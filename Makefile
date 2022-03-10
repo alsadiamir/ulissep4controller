@@ -1,7 +1,7 @@
 DELAY = 100ms
 name = simple
 
-topo: 
+topo:
 	make -C ./mininet mininet
 ctrl:
-	make -C ./controller prod
+	make -C ./controller
