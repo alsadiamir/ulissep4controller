@@ -3,13 +3,11 @@ package main
 import (
 	"controller/pkg/client"
 	"controller/pkg/util/conversion"
-	"fmt"
 	"net"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -104,55 +102,4 @@ func (sw *GrpcSwitch) addIpv4Lpm(ip []byte, mac []byte, port []byte) {
 		return
 	}
 	sw.log.Debugf("Added ipv4_lpm entry: %d", ip)
-}
-
-func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
-	defer conn.Close()
-	for message := range sw.messageCh {
-		switch m := message.Update.(type) {
-		case *p4_v1.StreamMessageResponse_Packet:
-			sw.log.Debug("Received Packetin")
-		case *p4_v1.StreamMessageResponse_Digest:
-			sw.log.Trace("Received DigestList")
-			sw.handleDigest(m.Digest)
-		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
-			sw.log.Trace("Received IdleTimeoutNotification")
-			sw.handleIdleTimeout(m.IdleTimeoutNotification)
-		case *p4_v1.StreamMessageResponse_Error:
-			sw.log.Trace("Received StreamError")
-			sw.errCh <- fmt.Errorf("StreamError: %v", m.Error)
-		default:
-			sw.log.Debug("Received unknown stream message")
-		}
-	}
-	sw.log.Trace("Closed message channel")
-	time.Sleep(defaultWait)
-}
-
-func (sw *GrpcSwitch) readCounter() {
-	sw.log.Debug("Reading counter")
-	for port := 1; port <= sw.ports; port++ {
-		lFields := log.WithFields(log.Fields{"ID": sw.id, "Port": port})
-		// read counter
-		counter, err := sw.p4RtC.ReadCounterEntry(packetCounter, int64(port))
-		if err != nil {
-			sw.errCh <- err
-			return
-		}
-		// log counter
-		if counter.GetPacketCount() > packetCountWarn {
-			lFields.Warnf("Packet count %d", counter.GetPacketCount())
-		} else {
-			lFields.Debugf("Packet count %d", counter.GetPacketCount())
-		}
-		// reset counter
-		if err = sw.p4RtC.ModifyCounterEntry(
-			packetCounter,
-			int64(port),
-			&p4_v1.CounterData{PacketCount: 0},
-		); err != nil {
-			sw.errCh <- err
-			return
-		}
-	}
 }

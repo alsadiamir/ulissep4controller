@@ -138,6 +138,28 @@ func (sw *GrpcSwitch) reconnect() {
 	}
 }
 
+func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
+	defer conn.Close()
+	for message := range sw.messageCh {
+		switch m := message.Update.(type) {
+		case *p4_v1.StreamMessageResponse_Packet:
+			sw.log.Debug("Received Packetin")
+		case *p4_v1.StreamMessageResponse_Digest:
+			sw.log.Trace("Received DigestList")
+			sw.handleDigest(m.Digest)
+		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
+			sw.log.Trace("Received IdleTimeoutNotification")
+			sw.handleIdleTimeout(m.IdleTimeoutNotification)
+		case *p4_v1.StreamMessageResponse_Error:
+			sw.log.Trace("Received StreamError")
+			sw.errCh <- fmt.Errorf("StreamError: %v", m.Error)
+		default:
+			sw.log.Debug("Received unknown stream message")
+		}
+	}
+	sw.log.Trace("Closed message channel")
+}
+
 func (sw *GrpcSwitch) addConfig() {
 	links := GetDefaultLinks(sw.id)
 	for _, link := range GetLinksBytes(links) {
