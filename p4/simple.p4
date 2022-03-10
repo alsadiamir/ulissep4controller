@@ -40,11 +40,6 @@ struct metadata {
     /* empty */
 }
 
-struct L2_digest {
-    macAddr_t smac;
-    egressSpec_t ig_port;
-}
-
 @controller_header("packet_in")
 header packet_in_t {
     macAddr_t dstAddr;
@@ -62,6 +57,13 @@ struct headers {
     ipv4_t       ipv4;
 }
 
+struct digest_t {
+    ip4Addr_t srcAddr;
+    ip4Addr_t dstAddr;
+    bit<9>    srcPort;
+    bit<9>    dstPort;
+}
+
 /*************************************************************************
 *********************** P A R S E R  ***********************************
 *************************************************************************/
@@ -73,11 +75,11 @@ parser MyParser(packet_in packet,
 
     state start {
 	transition select(standard_metadata.ingress_port){
-            CPU_PORT: parse_packet_out;	
+            CPU_PORT: parse_packet_out;
 	        default: parse_ethernet;
         }
     }
-    
+
     state parse_packet_out {
         packet.extract(hdr.packetout);
         transition parse_ethernet;
@@ -102,7 +104,7 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply {  }
 }
 
@@ -114,24 +116,22 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-    counter(NUM_PORTS, CounterType.packets) port_packets_in;
 
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
     action send_digest() {
-        digest<L2_digest>(1, {hdr.ethernet.srcAddr, standard_metadata.ingress_port});
+        digest<digest_t>(0, {hdr.ipv4.dstAddr, hdr.ipv4.srcAddr, standard_metadata.egress_spec ,standard_metadata.ingress_port});
     }
-    
+
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-        digest<L2_digest>(1, {hdr.ethernet.srcAddr, standard_metadata.ingress_port});
     }
-    
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -146,13 +146,13 @@ control MyIngress(inout headers hdr,
         support_timeout = true;
         default_action = send_digest();
     }
-    
+
     apply {
-        port_packets_in.count((bit<32>) standard_metadata.ingress_port);
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
         }
-        if (standard_metadata.egress_spec == CPU_PORT) { 
+
+        if (standard_metadata.egress_spec == CPU_PORT) {
             hdr.packetin.setValid();
             hdr.packetin.dstAddr = hdr.ethernet.dstAddr;
         }
