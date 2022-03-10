@@ -17,7 +17,7 @@ type GrpcSwitch struct {
 	id          uint64
 	binBytes    []byte
 	p4infoBytes []byte
-	routesFile  string
+	routesPath  string
 	ports       int
 	addr        string
 	restarts    int
@@ -28,12 +28,12 @@ type GrpcSwitch struct {
 	messageCh   chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(ctx context.Context, deviceID uint64, binPath string, p4infoPath string, ports int, routesfile string) *GrpcSwitch {
+func createSwitch(ctx context.Context, deviceID uint64, binPath string, p4infoPath string, ports int, routesPath string) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:          deviceID,
 		binBytes:    readFileBytes(binPath),
 		p4infoBytes: readFileBytes(p4infoPath),
-		routesFile:  routesfile,
+		routesPath:  routesPath,
 		ports:       ports,
 		addr:        fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:         log.WithField("ID", deviceID),
@@ -75,14 +75,10 @@ func (sw *GrpcSwitch) runSwitch() error {
 	}
 	// set pipeline config
 	time.Sleep(defaultWait)
-	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
-	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
-		return err
-	}
-	sw.log.Debug("Commited forward pipe config")
 	//
 	digestConfig := &p4_v1.DigestEntry_Config{
 		MaxTimeoutNs: 0,
@@ -95,7 +91,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	sw.log.Debugf("Enabled digest %s", digestName)
 
 	sw.errCh = make(chan error, 1)
-	sw.addConfig(sw.routesFile)
+	sw.addConfig()
 	go sw.handleStreamMessages(conn)
 	go sw.startRunner()
 
@@ -163,8 +159,8 @@ func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
 	sw.log.Trace("Closed message channel")
 }
 
-func (sw *GrpcSwitch) addConfig(configPath string) {
-	links := GetLinks(sw.id, configPath)
+func (sw *GrpcSwitch) addConfig() {
+	links := GetLinks(sw.id, sw.routesPath)
 	for _, link := range GetLinksBytes(links) {
 		sw.addIpv4Lpm(link.ip, link.mac, link.port)
 	}

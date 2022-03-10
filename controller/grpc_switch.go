@@ -103,3 +103,18 @@ func (sw *GrpcSwitch) addIpv4Lpm(ip []byte, mac []byte, port []byte) {
 	}
 	sw.log.Debugf("Added ipv4_lpm entry: %d -> p%d", ip, port)
 }
+
+func (sw *GrpcSwitch) UpdateSwConfig(p4infoPath string, routesPath string) error {
+	sw.p4infoBytes = readFileBytes(p4infoPath)
+	sw.routesPath = routesPath
+
+	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
+		return err
+	}
+	sw.addConfig()
+	time.Sleep(defaultWait)
+	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
+		return nil
+	}
+	return nil
+}

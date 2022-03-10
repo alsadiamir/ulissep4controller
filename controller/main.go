@@ -61,9 +61,17 @@ func main() {
 
 	// clean exit
 	signalCh := signals.RegisterSignalHandlers()
+	log.Info("Press enter so switch config")
+	fmt.Scanf("%s")
+	fmt.Println()
+	log.Info("Changhe switch config")
+	for _, sw := range switchs {
+		if err := sw.UpdateSwConfig(p4infoPath, "routes_long.json"); err != nil {
+			sw.log.Errorf("Error updating swConfig: %v", err)
+		}
+	}
 	log.Info("Do Ctrl-C to quit")
 	<-signalCh
-	fmt.Println()
 	cancel()
 	time.Sleep(defaultWait * time.Duration(nDevices))
 }
