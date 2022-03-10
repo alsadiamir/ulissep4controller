@@ -101,5 +101,5 @@ func (sw *GrpcSwitch) addIpv4Lpm(ip []byte, mac []byte, port []byte) {
 		sw.errCh <- err
 		return
 	}
-	sw.log.Debugf("Added ipv4_lpm entry: %d", ip)
+	sw.log.Debugf("Added ipv4_lpm entry: %d -> p%d", ip, port)
 }
