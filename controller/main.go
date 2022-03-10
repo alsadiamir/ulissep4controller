@@ -51,7 +51,7 @@ func main() {
 	switchs := make([]*GrpcSwitch, nDevices)
 	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(ctx, uint64(i+1), binPath, p4infoPath, 3)
+		sw := createSwitch(ctx, uint64(i+1), binPath, p4infoPath, 3, "routes.json")
 		if err := sw.runSwitch(); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
