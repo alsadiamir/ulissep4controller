@@ -1,4 +1,4 @@
-p4program = asymmetric
+p4program = simple
 
 all: debug
 debug:

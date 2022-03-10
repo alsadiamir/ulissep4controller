@@ -144,7 +144,7 @@ control MyIngress(inout headers hdr,
         }
         size = 1024;
         support_timeout = true;
-        default_action = send_digest();
+        default_action = drop();
     }
 
     apply {
