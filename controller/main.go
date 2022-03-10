@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -49,26 +48,10 @@ func main() {
 	}
 	log.Infof("Starting %d devices", nDevices)
 
-	binBytes := []byte("per")
-	if binPath != "" {
-		var err error
-		if binBytes, err = ioutil.ReadFile(binPath); err != nil {
-			log.Fatalf("Error when reading binary config from '%s': %v", binPath, err)
-		}
-	}
-
-	p4infoBytes := []byte("per")
-	if p4infoPath != "" {
-		var err error
-		if p4infoBytes, err = ioutil.ReadFile(p4infoPath); err != nil {
-			log.Fatalf("Error when reading P4Info text file '%s': %v", p4infoPath, err)
-		}
-	}
-
 	switchs := make([]*GrpcSwitch, nDevices)
 	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(ctx, uint64(i+1), binBytes, p4infoBytes, 3)
+		sw := createSwitch(ctx, uint64(i+1), binPath, p4infoPath, 3)
 		if err := sw.runSwitch(); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)

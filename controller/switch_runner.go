@@ -4,6 +4,7 @@ import (
 	"context"
 	"controller/pkg/client"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -26,11 +27,11 @@ type GrpcSwitch struct {
 	messageCh   chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(ctx context.Context, deviceID uint64, binBytes []byte, p4infoBytes []byte, ports int) *GrpcSwitch {
+func createSwitch(ctx context.Context, deviceID uint64, binPath string, p4infoPath string, ports int) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:          deviceID,
-		binBytes:    binBytes,
-		p4infoBytes: p4infoBytes,
+		binBytes:    readFileBytes(binPath),
+		p4infoBytes: readFileBytes(p4infoPath),
 		ports:       ports,
 		addr:        fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:         log.WithField("ID", deviceID),
@@ -165,4 +166,15 @@ func (sw *GrpcSwitch) addConfig() {
 	for _, link := range GetLinksBytes(links) {
 		sw.addIpv4Lpm(link.ip, link.mac, link.port)
 	}
+}
+
+func readFileBytes(filePath string) []byte {
+	bytes := []byte("per")
+	if filePath != "" {
+		var err error
+		if bytes, err = ioutil.ReadFile(filePath); err != nil {
+			log.Fatalf("Error when reading binary from '%s': %v", filePath, err)
+		}
+	}
+	return bytes
 }
