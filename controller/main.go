@@ -4,11 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/antoninbas/p4runtime-go-client/pkg/signals"
 )
 
 const (
@@ -60,17 +59,28 @@ func main() {
 	}
 
 	// clean exit
-	signalCh := signals.RegisterSignalHandlers()
-	log.Info("Press enter so switch config")
-	fmt.Scanf("%s")
-	log.Info("Changhe switch config")
-	for _, sw := range switchs {
-		if err := sw.UpdateSwConfig(p4infoPath, "routes_long.json"); err != nil {
-			log.Errorf("Error updating swConfig: %v", err)
+	//signalCh := signals.RegisterSignalHandlers()
+
+	buff := make([]byte, 10)
+	n, _ := os.Stdin.Read(buff)
+	current_route := "routes.json"
+	for n > 0 {
+		log.Info("Changing switch config")
+		if current_route == "routes.json" {
+			current_route = "routes_long.json"
+		} else {
+			current_route = "routes.json"
 		}
+		for _, sw := range switchs {
+			if err := sw.UpdateSwConfig(p4infoPath, current_route); err != nil {
+				log.Errorf("Error updating swConfig: %v", err)
+			}
+		}
+		log.Info("Press enter to change switch config")
+		n, _ = os.Stdin.Read(buff)
 	}
-	log.Info("Do Ctrl-C to quit")
-	<-signalCh
+
+	fmt.Println()
 	cancel()
-	time.Sleep(defaultWait * time.Duration(nDevices))
+	time.Sleep(defaultWait)
 }
