@@ -4,7 +4,6 @@ import (
 	"context"
 	"controller/pkg/client"
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -14,30 +13,26 @@ import (
 )
 
 type GrpcSwitch struct {
-	id          uint64
-	binBytes    []byte
-	p4infoBytes []byte
-	routesPath  string
-	ports       int
-	addr        string
-	restarts    int
-	log         *log.Entry
-	errCh       chan error
-	ctx         context.Context
-	p4RtC       *client.Client
-	messageCh   chan *p4_v1.StreamMessageResponse
+	id         uint64
+	configName string
+	ports      int
+	addr       string
+	restarts   int
+	log        *log.Entry
+	errCh      chan error
+	ctx        context.Context
+	p4RtC      *client.Client
+	messageCh  chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(ctx context.Context, deviceID uint64, binPath string, p4infoPath string, ports int, routesPath string) *GrpcSwitch {
+func createSwitch(ctx context.Context, deviceID uint64, configName string, ports int) *GrpcSwitch {
 	return &GrpcSwitch{
-		id:          deviceID,
-		binBytes:    readFileBytes(binPath),
-		p4infoBytes: readFileBytes(p4infoPath),
-		routesPath:  routesPath,
-		ports:       ports,
-		addr:        fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
-		log:         log.WithField("ID", deviceID),
-		ctx:         ctx,
+		id:         deviceID,
+		configName: configName,
+		ports:      ports,
+		addr:       fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
+		log:        log.WithField("ID", deviceID),
+		ctx:        ctx,
 	}
 }
 
@@ -75,7 +70,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	}
 	// set pipeline config
 	time.Sleep(defaultWait)
-	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
@@ -91,7 +86,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	sw.log.Debugf("Enabled digest %s", digestName)
 
 	sw.errCh = make(chan error, 1)
-	sw.addConfig()
+	sw.addRoutes()
 	go sw.handleStreamMessages(conn)
 	go sw.startRunner()
 
@@ -104,12 +99,8 @@ func (sw *GrpcSwitch) startRunner() {
 		close(sw.messageCh)
 		sw.log.Info("Stopping")
 	}()
-	// handle ticker
-	ticker := time.NewTicker(packetCheckRate)
 	for {
 		select {
-		case <-ticker.C:
-			//sw.readCounter()
 		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
 			go sw.reconnect()
@@ -157,22 +148,4 @@ func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
 		}
 	}
 	sw.log.Trace("Closed message channel")
-}
-
-func (sw *GrpcSwitch) addConfig() {
-	links := GetLinks(sw.id, sw.routesPath)
-	for _, link := range GetLinksBytes(links) {
-		sw.addIpv4Lpm(link.ip, link.mac, link.port)
-	}
-}
-
-func readFileBytes(filePath string) []byte {
-	bytes := []byte("per")
-	if filePath != "" {
-		var err error
-		if bytes, err = ioutil.ReadFile(filePath); err != nil {
-			log.Fatalf("Error when reading binary from '%s': %v", filePath, err)
-		}
-	}
-	return bytes
 }

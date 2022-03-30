@@ -33,10 +33,8 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
 	var trace bool
 	flag.BoolVar(&trace, "trace", false, "Enable trace mode with log messages")
-	var binPath string
-	flag.StringVar(&binPath, "bin", "", "Path to P4 bin (not needed for bmv2 simple_switch_grpc)")
-	var p4infoPath string
-	flag.StringVar(&p4infoPath, "p4info", "", "Path to P4Info (not needed for bmv2 simple_switch_grpc)")
+	var programName string
+	flag.StringVar(&programName, "program", "", "Program name")
 	flag.Parse()
 
 	if verbose {
@@ -50,7 +48,7 @@ func main() {
 	switchs := make([]*GrpcSwitch, nDevices)
 	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(ctx, uint64(i+1), binPath, p4infoPath, 3, "routes.json")
+		sw := createSwitch(ctx, uint64(i+1), programName, 3)
 		if err := sw.runSwitch(); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
@@ -63,17 +61,16 @@ func main() {
 
 	buff := make([]byte, 10)
 	n, _ := os.Stdin.Read(buff)
-	current_route := "routes.json"
 	for n > 0 {
-		log.Info("Changing switch config")
-		if current_route == "routes.json" {
-			current_route = "routes_long.json"
+		if programName == "simple" {
+			programName = "simple1"
 		} else {
-			current_route = "routes.json"
+			programName = "simple"
 		}
+		log.Infof("Changing switch config to %s", programName)
 		for _, sw := range switchs {
-			if err := sw.UpdateSwConfig(p4infoPath, current_route); err != nil {
-				log.Errorf("Error updating swConfig: %v", err)
+			if err := sw.ChangeConfig(programName); err != nil {
+				sw.log.Errorf("Error updating swConfig: %v", err)
 			}
 		}
 		log.Info("Press enter to change switch config")

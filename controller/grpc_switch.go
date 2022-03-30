@@ -86,35 +86,3 @@ func (sw *GrpcSwitch) handleIdleTimeout(notification *p4_v1.IdleTimeoutNotificat
 		sw.log.Infof("Remvd ipv4_drop entry: %d", entry.Match[0].GetExact().Value)
 	}
 }
-
-func (sw *GrpcSwitch) addIpv4Lpm(ip []byte, mac []byte, port []byte) {
-	entry := sw.p4RtC.NewTableEntry(
-		ipv4_lpm_table,
-		[]client.MatchInterface{&client.LpmMatch{
-			Value: ip,
-			PLen:  32,
-		}},
-		sw.p4RtC.NewTableActionDirect(ipv4_forward, [][]byte{mac, port}),
-		nil,
-	)
-	if err := sw.p4RtC.InsertTableEntry(entry); err != nil {
-		sw.errCh <- err
-		return
-	}
-	sw.log.Debugf("Added ipv4_lpm entry: %d -> p%d", ip, port)
-}
-
-func (sw *GrpcSwitch) UpdateSwConfig(p4infoPath string, routesPath string) error {
-	sw.p4infoBytes = readFileBytes(p4infoPath)
-	sw.routesPath = routesPath
-
-	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.binBytes, sw.p4infoBytes, 0); err != nil {
-		return err
-	}
-	sw.addConfig()
-	time.Sleep(defaultWait)
-	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
-		return nil
-	}
-	return nil
-}
