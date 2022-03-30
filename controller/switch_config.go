@@ -48,7 +48,7 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
 		sw.errCh <- err
 		return
 	}
-	sw.log.Debugf("Added ipv4_lpm entry: %d -> p%d", route.ip, route.port)
+	sw.log.Debugf("Added %s entry: %d -> p%d", route.table, route.ip, route.port)
 }
 
 func (sw *GrpcSwitch) ChangeConfig(configName string) error {
