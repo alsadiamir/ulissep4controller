@@ -2,9 +2,12 @@ package main
 
 import (
 	"controller/pkg/client"
+	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
+	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,7 +51,7 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
 		sw.errCh <- err
 		return
 	}
-	sw.log.Debugf("Added %s entry: %d -> p%d", route.table, route.ip, route.port)
+	sw.log.Debugf("Added %s entry: %d -> p%d", strings.Split(route.table, ".")[1], route.ip, route.port)
 }
 
 func (sw *GrpcSwitch) ChangeConfig(configName string) error {
@@ -57,9 +60,10 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 		return err
 	}
 	sw.addRoutes()
+	sw.enableDigest(digestName)
 	time.Sleep(defaultWait)
 	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
-		return nil
+		return err
 	}
 	return nil
 }
@@ -72,4 +76,17 @@ func (sw *GrpcSwitch) readP4Info() []byte {
 func (sw *GrpcSwitch) readBin() []byte {
 	p4Bin := configPath + sw.configName + p4BinExt
 	return readFileBytes(p4Bin)
+}
+
+func (sw *GrpcSwitch) enableDigest(digestName string) error {
+	digestConfig := &p4_v1.DigestEntry_Config{
+		MaxTimeoutNs: 0,
+		MaxListSize:  1,
+		AckTimeoutNs: time.Second.Nanoseconds() * 1000,
+	}
+	if err := sw.p4RtC.EnableDigest(digestName, digestConfig); err != nil {
+		return fmt.Errorf("cannot enable digest %s", digestName)
+	}
+	sw.log.Debugf("Enabled digest %s", digestName)
+	return nil
 }

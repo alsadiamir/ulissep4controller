@@ -11,9 +11,7 @@ import (
 )
 
 const (
-	ipv4_lpm_table  = "MyIngress.ipv4_lpm"
 	ipv4_drop_table = "MyIngress.ipv4_drop"
-	ipv4_forward    = "MyIngress.ipv4_forward"
 	ipv4_drop       = "MyIngress.drop"
 	tableTimeout    = 10 * time.Second
 )

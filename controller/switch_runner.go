@@ -75,15 +75,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	}
 	sw.log.Debug("Setted forwarding pipe")
 	//
-	digestConfig := &p4_v1.DigestEntry_Config{
-		MaxTimeoutNs: 0,
-		MaxListSize:  1,
-		AckTimeoutNs: time.Second.Nanoseconds() * 1000,
-	}
-	if err := sw.p4RtC.EnableDigest(digestName, digestConfig); err != nil {
-		return fmt.Errorf("cannot enable digest %s", digestName)
-	}
-	sw.log.Debugf("Enabled digest %s", digestName)
+	sw.enableDigest(digestName)
 
 	sw.errCh = make(chan error, 1)
 	sw.addRoutes()

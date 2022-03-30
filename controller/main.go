@@ -34,8 +34,13 @@ func main() {
 	var trace bool
 	flag.BoolVar(&trace, "trace", false, "Enable trace mode with log messages")
 	var programName string
-	flag.StringVar(&programName, "program", "", "Program name")
+	flag.StringVar(&programName, "program", "simple", "Program name")
+	var programNameAlt string
+	flag.StringVar(&programNameAlt, "program-alt", "", "Alternative program name")
 	flag.Parse()
+	if programNameAlt == "" {
+		programNameAlt = programName
+	}
 
 	if verbose {
 		log.SetLevel(log.DebugLevel)
@@ -61,15 +66,16 @@ func main() {
 
 	buff := make([]byte, 10)
 	n, _ := os.Stdin.Read(buff)
+	currentProgram := programName
 	for n > 0 {
-		if programName == "simple" {
-			programName = "simple1"
+		if currentProgram == programName {
+			currentProgram = programNameAlt
 		} else {
-			programName = "simple"
+			currentProgram = programName
 		}
-		log.Infof("Changing switch config to %s", programName)
+		log.Infof("Changing switch config to %s", currentProgram)
 		for _, sw := range switchs {
-			if err := sw.ChangeConfig(programName); err != nil {
+			if err := sw.ChangeConfig(currentProgram); err != nil {
 				sw.log.Errorf("Error updating swConfig: %v", err)
 			}
 		}
