@@ -11,24 +11,18 @@ import (
 )
 
 const (
-	defaultPort      = 50050
-	defaultAddr      = "127.0.0.1"
-	defaultWait      = 250 * time.Millisecond
-	reconnectTimeout = 5 * time.Second
-	packetCounter    = "MyIngress.port_packets_in"
-	packetCountWarn  = 20
-	packetCheckRate  = 5 * time.Second
-	digestName       = "digest_t"
-)
-
-var (
-	maxRetry int
+	defaultPort     = 50050
+	defaultAddr     = "127.0.0.1"
+	defaultWait     = 250 * time.Millisecond
+	packetCounter   = "MyIngress.port_packets_in"
+	packetCountWarn = 20
+	packetCheckRate = 5 * time.Second
+	digestName      = "digest_t"
 )
 
 func main() {
 	var nDevices int
 	flag.IntVar(&nDevices, "n", 1, "Number of devices")
-	flag.IntVar(&maxRetry, "retry", 0, "Number of times retry to connect")
 	var verbose bool
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
 	var trace bool
@@ -50,19 +44,21 @@ func main() {
 	}
 	log.Infof("Starting %d devices", nDevices)
 
-	switchs := make([]*GrpcSwitch, nDevices)
+	switchs := make([]*GrpcSwitch, 0, nDevices)
 	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < nDevices; i++ {
 		sw := createSwitch(ctx, uint64(i+1), programName, 3)
 		if err := sw.runSwitch(); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
+		} else {
+			switchs = append(switchs, sw)
 		}
-		switchs[i] = sw
 	}
-
-	// clean exit
-	//signalCh := signals.RegisterSignalHandlers()
+	if len(switchs) == 0 {
+		log.Info("No switches started")
+		return
+	}
 
 	buff := make([]byte, 10)
 	n, _ := os.Stdin.Read(buff)

@@ -17,15 +17,16 @@ type GrpcSwitch struct {
 	configName string
 	ports      int
 	addr       string
-	restarts   int
 	log        *log.Entry
 	errCh      chan error
 	ctx        context.Context
+	cancel     context.CancelFunc
 	p4RtC      *client.Client
 	messageCh  chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(ctx context.Context, deviceID uint64, configName string, ports int) *GrpcSwitch {
+func createSwitch(c context.Context, deviceID uint64, configName string, ports int) *GrpcSwitch {
+	ctx, cancel := context.WithCancel(c)
 	return &GrpcSwitch{
 		id:         deviceID,
 		configName: configName,
@@ -33,6 +34,7 @@ func createSwitch(ctx context.Context, deviceID uint64, configName string, ports
 		addr:       fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:        log.WithField("ID", deviceID),
 		ctx:        ctx,
+		cancel:     cancel,
 	}
 }
 
@@ -58,7 +60,7 @@ func (sw *GrpcSwitch) runSwitch() error {
 	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 1000)
 	arbitrationCh := make(chan bool)
 	sw.p4RtC = client.NewClient(c, sw.id, electionID)
-	go sw.p4RtC.Run(sw.ctx, arbitrationCh, sw.messageCh)
+	go sw.p4RtC.Run(sw.ctx, sw.cancel, arbitrationCh, sw.messageCh)
 	// check primary
 	for isPrimary := range arbitrationCh {
 		if isPrimary {
@@ -79,49 +81,32 @@ func (sw *GrpcSwitch) runSwitch() error {
 
 	sw.errCh = make(chan error, 1)
 	sw.addRoutes()
-	go sw.handleStreamMessages(conn)
-	go sw.startRunner()
+	go sw.handleStreamMessages()
+	go sw.startRunner(conn)
 
 	sw.log.Debug("Switch configured")
 	return nil
 }
 
-func (sw *GrpcSwitch) startRunner() {
+func (sw *GrpcSwitch) startRunner(conn *grpc.ClientConn) {
 	defer func() {
 		close(sw.messageCh)
+		sw.cancel()
+		conn.Close()
 		sw.log.Info("Stopping")
 	}()
 	for {
 		select {
 		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
-			go sw.reconnect()
-			return
+			sw.cancel()
 		case <-sw.ctx.Done():
 			return
 		}
 	}
 }
 
-func (sw *GrpcSwitch) reconnect() {
-	if sw.restarts >= maxRetry {
-		sw.log.Errorf("Max retry attempt, killing")
-		return
-	}
-	sw.restarts++
-	sw.log.Infof("Reconnect attempt n. %d", sw.restarts)
-	if err := sw.runSwitch(); err != nil {
-		sw.log.Errorf("%v", err)
-		time.Sleep(reconnectTimeout)
-		sw.reconnect()
-	} else {
-		// reset retries
-		sw.restarts = 0
-	}
-}
-
-func (sw *GrpcSwitch) handleStreamMessages(conn *grpc.ClientConn) {
-	defer conn.Close()
+func (sw *GrpcSwitch) handleStreamMessages() {
 	for message := range sw.messageCh {
 		switch m := message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:

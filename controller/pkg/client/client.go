@@ -61,11 +61,13 @@ func (c *Client) GetDeviceId() uint64 {
 
 func (c *Client) Run(
 	ctx context.Context,
+	cancel context.CancelFunc,
 	arbitrationCh chan<- bool,
 	messageCh chan<- *p4_v1.StreamMessageResponse, // all other stream messages besides arbitration
 ) error {
 	stream, err := c.StreamChannel(ctx)
 	if err != nil {
+		cancel()
 		return fmt.Errorf("cannot establish stream: %v", err)
 	}
 	defer stream.CloseSend()
@@ -73,11 +75,8 @@ func (c *Client) Run(
 	go func() {
 		for {
 			in, err := stream.Recv()
-			if err == io.EOF {
-				// TODO: should reconnect
-				return
-			}
 			if err != nil {
+				cancel()
 				return
 			}
 			arbitration, ok := in.Update.(*p4_v1.StreamMessageResponse_Arbitration)
