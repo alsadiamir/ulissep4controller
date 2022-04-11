@@ -8,7 +8,6 @@ from mininet.log import setLogLevel
 from mininet.net import Mininet
 from mininet.topo import Topo
 from mininet.cli import CLI
-from mininet.link import TCLink
 from p4_mininet import P4GrpcSwitch, P4Host
 
 
@@ -33,8 +32,7 @@ class TopoRunner:
         self.net = Mininet(topo=topo,
                            host=P4Host,
                            switch=P4GrpcSwitch,
-                           controller=None,
-                           link=TCLink)
+                           controller=None)
 
     def parse_links(self, unparsed_links):
         """ Given a list of links descriptions of the form [node1, node2, latency, bandwidth]
