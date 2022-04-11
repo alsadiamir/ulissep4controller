@@ -7,7 +7,7 @@
         "action": "MyIngress.ipv4_forward"
       },
       {
-        "port": 3,
+        "port": 2,
         "host": "h2",
         "action": "MyIngress.ipv4_forward"
       },
