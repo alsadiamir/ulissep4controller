@@ -25,20 +25,20 @@ type GrpcSwitch struct {
 	messageCh  chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(c context.Context, deviceID uint64, configName string, ports int) *GrpcSwitch {
-	ctx, cancel := context.WithCancel(c)
+func createSwitch(deviceID uint64, configName string, ports int) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:         deviceID,
 		configName: configName,
 		ports:      ports,
 		addr:       fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:        log.WithField("ID", deviceID),
-		ctx:        ctx,
-		cancel:     cancel,
 	}
 }
 
-func (sw *GrpcSwitch) runSwitch() error {
+func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
+	ctx, cancel := context.WithCancel(ct)
+	sw.ctx = ctx
+	sw.cancel = cancel
 	sw.log.Infof("Connecting to server at %s", sw.addr)
 	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
 	if err != nil {

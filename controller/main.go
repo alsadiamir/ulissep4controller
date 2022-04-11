@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,11 +47,11 @@ func main() {
 	}
 	log.Infof("Starting %d devices", nDevices)
 
-	switchs := make([]*GrpcSwitch, 0, nDevices)
 	ctx, cancel := context.WithCancel(context.Background())
+	switchs := make([]*GrpcSwitch, 0, nDevices)
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(ctx, uint64(i+1), programName, 3)
-		if err := sw.runSwitch(); err != nil {
+		sw := createSwitch(uint64(i+1), programName, 3)
+		if err := sw.runSwitch(ctx); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
 		} else {
@@ -72,10 +75,18 @@ func main() {
 		log.Infof("Changing switch config to %s", currentProgram)
 		for _, sw := range switchs {
 			if err := sw.ChangeConfig(currentProgram); err != nil {
-				sw.log.Errorf("Error updating swConfig: %v", err)
+				if status.Convert(err).Code() == codes.Canceled {
+					sw.log.Warn("Failed to update config, restarting")
+					if err := sw.runSwitch(ctx); err != nil {
+						sw.log.Errorf("Cannot start")
+						log.Errorf("%v", err)
+					}
+				} else {
+					sw.log.Errorf("Error updating swConfig: %v", err)
+				}
 			}
 		}
-		log.Info("Press enter to change switch config")
+		log.Info("Done\nPress enter to change switch config or EOF to terminate")
 		n, _ = os.Stdin.Read(buff)
 	}
 
