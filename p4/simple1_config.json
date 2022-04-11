@@ -27,7 +27,7 @@
         "action": "MyIngress.ipv4_forward"
       },
       {
-        "port": 3,
+        "port": 2,
         "host": "h1",
         "action": "MyIngress.ipv4_forward"
       },
@@ -42,7 +42,7 @@
   "s3": {
     "routes": [
       {
-        "port": 0,
+        "port": 1,
         "host": "h3",
         "action": "MyIngress.ipv4_forward"
       },

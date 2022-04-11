@@ -1,5 +1,5 @@
 p4program = simple
-p4program-alt = asymmetric
+p4program-alt = simple1
 
 all: debug
 debug:
