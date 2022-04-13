@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"controller/pkg/client"
 	"fmt"
 	"time"
+
+	"github.com/antoninbas/p4runtime-go-client/pkg/client"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
@@ -60,7 +61,8 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 1000)
 	arbitrationCh := make(chan bool)
 	sw.p4RtC = client.NewClient(c, sw.id, electionID)
-	go sw.p4RtC.Run(sw.ctx, sw.cancel, arbitrationCh, sw.messageCh)
+	stopCh := make(chan struct{})
+	go sw.p4RtC.Run(stopCh, arbitrationCh, sw.messageCh)
 	// check primary
 	for isPrimary := range arbitrationCh {
 		if isPrimary {
@@ -72,7 +74,7 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	}
 	// set pipeline config
 	time.Sleep(defaultWait)
-	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.ctx, sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")

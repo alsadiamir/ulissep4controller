@@ -1,13 +1,13 @@
 package main
 
 import (
-	"controller/pkg/util/conversion"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/antoninbas/p4runtime-go-client/pkg/util/conversion"
 	log "github.com/sirupsen/logrus"
 )
 

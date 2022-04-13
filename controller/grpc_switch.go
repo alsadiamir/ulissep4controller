@@ -1,11 +1,11 @@
 package main
 
 import (
-	"controller/pkg/client"
-	"controller/pkg/util/conversion"
+	"controller/util"
 	"net"
 	"time"
 
+	"github.com/antoninbas/p4runtime-go-client/pkg/client"
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
 )
@@ -34,7 +34,7 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 		}).Trace()
 		sw.addIpv4Drop(digestData.srcAddr.To4())
 	}
-	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
+	if err := sw.p4RtC.AckDigestList(sw.ctx, digestList); err != nil {
 		sw.errCh <- err
 	}
 	sw.log.Trace("Ack digest list")
@@ -43,10 +43,10 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 	srcAddrByte := str.Members[0].GetBitstring()
 	dstAddrByte := str.Members[1].GetBitstring()
-	srcAddr := conversion.BinaryToIpv4(srcAddrByte)
-	dstAddr := conversion.BinaryToIpv4(dstAddrByte)
-	srcPort := conversion.BinaryCompressedToUint16(str.Members[2].GetBitstring())
-	dstPort := conversion.BinaryCompressedToUint16(str.Members[3].GetBitstring())
+	srcAddr := util.BinaryToIpv4(srcAddrByte)
+	dstAddr := util.BinaryToIpv4(dstAddrByte)
+	srcPort := util.BinaryCompressedToUint16(str.Members[2].GetBitstring())
+	dstPort := util.BinaryCompressedToUint16(str.Members[3].GetBitstring())
 	return digest_t{
 		srcAddr: srcAddr,
 		dstAddr: dstAddr,
@@ -64,7 +64,7 @@ func (sw *GrpcSwitch) addIpv4Drop(ip []byte) {
 		sw.p4RtC.NewTableActionDirect(ipv4_drop, [][]byte{}),
 		&client.TableEntryOptions{IdleTimeout: tableTimeout},
 	)
-	if err := sw.p4RtC.SafeInsertTableEntry(entry); err != nil {
+	if err := sw.p4RtC.InsertTableEntry(sw.ctx, entry); err != nil {
 		sw.errCh <- err
 		return
 	}
@@ -74,10 +74,10 @@ func (sw *GrpcSwitch) addIpv4Drop(ip []byte) {
 func (sw *GrpcSwitch) handleIdleTimeout(notification *p4_v1.IdleTimeoutNotification) {
 	for _, entry := range notification.TableEntry {
 		// handle drop table id
-		if entry.TableId != sw.p4RtC.TableId(ipv4_drop_table) {
-			return
-		}
-		if err := sw.p4RtC.DeleteTableEntry(entry); err != nil {
+		// if entry.TableId != sw.p4RtC.TableId(ipv4_drop_table) {
+		// 	return
+		// }
+		if err := sw.p4RtC.DeleteTableEntry(sw.ctx, entry); err != nil {
 			sw.errCh <- err
 			return
 		}

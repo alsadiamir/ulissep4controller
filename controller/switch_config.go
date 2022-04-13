@@ -1,12 +1,12 @@
 package main
 
 import (
-	"controller/pkg/client"
 	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
 
+	"github.com/antoninbas/p4runtime-go-client/pkg/client"
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,7 +47,7 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
 		sw.p4RtC.NewTableActionDirect(route.action, [][]byte{route.mac, route.port}),
 		nil,
 	)
-	if err := sw.p4RtC.InsertTableEntry(entry); err != nil {
+	if err := sw.p4RtC.InsertTableEntry(sw.ctx, entry); err != nil {
 		sw.errCh <- err
 		return
 	}
@@ -55,16 +55,16 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
 }
 
 func (sw *GrpcSwitch) ChangeConfig(configName string) error {
-	sw.configName = configName
-	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
-		return err
-	}
-	sw.addRoutes()
-	sw.enableDigest(digestName)
-	time.Sleep(defaultWait)
-	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
-		return err
-	}
+	// sw.configName = configName
+	// if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+	// 	return err
+	// }
+	// sw.addRoutes()
+	// sw.enableDigest(digestName)
+	// time.Sleep(defaultWait)
+	// if err := sw.p4RtC.CommitFwdPipe(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -84,7 +84,7 @@ func (sw *GrpcSwitch) enableDigest(digestName string) error {
 		MaxListSize:  1,
 		AckTimeoutNs: time.Second.Nanoseconds() * 1000,
 	}
-	if err := sw.p4RtC.EnableDigest(digestName, digestConfig); err != nil {
+	if err := sw.p4RtC.EnableDigest(sw.ctx, digestName, digestConfig); err != nil {
 		return fmt.Errorf("cannot enable digest %s", digestName)
 	}
 	sw.log.Debugf("Enabled digest %s", digestName)
