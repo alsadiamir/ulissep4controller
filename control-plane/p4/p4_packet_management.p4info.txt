@@ -1,0 +1,765 @@
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 37375156
+    name: "MyIngress.ipv4_lpm"
+    alias: "ipv4_lpm"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 28792405
+  }
+  action_refs {
+    id: 25652968
+  }
+  action_refs {
+    id: 21257015
+  }
+  size: 1024
+  idle_timeout_behavior: NOTIFY_CONTROL
+}
+actions {
+  preamble {
+    id: 21257015
+    name: "NoAction"
+    alias: "NoAction"
+    annotations: "@noWarn(\"unused\")"
+  }
+}
+actions {
+  preamble {
+    id: 25652968
+    name: "MyIngress.drop"
+    alias: "drop"
+  }
+}
+actions {
+  preamble {
+    id: 23592486
+    name: "MyIngress.send_digest"
+    alias: "send_digest"
+  }
+}
+actions {
+  preamble {
+    id: 28792405
+    name: "MyIngress.ipv4_forward"
+    alias: "ipv4_forward"
+  }
+  params {
+    id: 1
+    name: "dstAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "port"
+    bitwidth: 9
+  }
+}
+registers {
+  preamble {
+    id: 379594493
+    name: "time0"
+    alias: "time0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 371598984
+    name: "packet_length0"
+    alias: "packet_length0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 379612139
+    name: "ip_flags0"
+    alias: "ip_flags0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 378873833
+    name: "tcp_len0"
+    alias: "tcp_len0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 382340145
+    name: "tcp_ack0"
+    alias: "tcp_ack0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 369468169
+    name: "tcp_flags0"
+    alias: "tcp_flags0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 9
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 369663508
+    name: "tcp_window_size0"
+    alias: "tcp_window_size0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 382301841
+    name: "udp_len0"
+    alias: "udp_len0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 370720414
+    name: "icmp_type0"
+    alias: "icmp_type0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 8
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 380362711
+    name: "dst_port0"
+    alias: "dst_port0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 380725146
+    name: "src_port0"
+    alias: "src_port0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 374664666
+    name: "src_ip0"
+    alias: "src_ip0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 382048462
+    name: "dst_ip0"
+    alias: "dst_ip0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 376874374
+    name: "ip_upper_protocol0"
+    alias: "ip_upper_protocol0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 8
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 378092196
+    name: "packet_counter0"
+    alias: "packet_counter0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 17
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 375964814
+    name: "time1"
+    alias: "time1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 376977141
+    name: "packet_length1"
+    alias: "packet_length1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 371414251
+    name: "ip_flags1"
+    alias: "ip_flags1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 376269707
+    name: "tcp_len1"
+    alias: "tcp_len1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 374565700
+    name: "tcp_ack1"
+    alias: "tcp_ack1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 374884270
+    name: "tcp_flags1"
+    alias: "tcp_flags1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 9
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 384185294
+    name: "tcp_window_size1"
+    alias: "tcp_window_size1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 375494082
+    name: "udp_len1"
+    alias: "udp_len1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 382933523
+    name: "icmp_type1"
+    alias: "icmp_type1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 8
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 370815155
+    name: "dst_port1"
+    alias: "dst_port1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 383838195
+    name: "src_port1"
+    alias: "src_port1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 16
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 374558167
+    name: "src_ip1"
+    alias: "src_ip1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 372860342
+    name: "dst_ip1"
+    alias: "dst_ip1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 370906832
+    name: "ip_upper_protocol1"
+    alias: "ip_upper_protocol1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 8
+      }
+    }
+  }
+  size: 131072
+}
+registers {
+  preamble {
+    id: 374251055
+    name: "packet_counter1"
+    alias: "packet_counter1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 17
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 381675851
+    name: "block_writing"
+    alias: "block_writing"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 1
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 370218048
+    name: "block_of_registers"
+    alias: "block_of_registers"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 1
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 373265327
+    name: "sampling_counter"
+    alias: "sampling_counter"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 4
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 378105256
+    name: "sampling_treshold"
+    alias: "sampling_treshold"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 4
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 383624094
+    name: "not_foldable_counter0"
+    alias: "not_foldable_counter0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 100
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 372112958
+    name: "not_foldable_counter1"
+    alias: "not_foldable_counter1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 100
+      }
+    }
+  }
+  size: 1
+}
+digests {
+  preamble {
+    id: 389049336
+    name: "digest_t"
+    alias: "digest_t"
+  }
+  type_spec {
+    struct {
+      name: "digest_t"
+    }
+  }
+}
+type_info {
+  structs {
+    key: "digest_t"
+    value {
+      members {
+        name: "ingress_timestamp"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 48
+            }
+          }
+        }
+      }
+      members {
+        name: "packet_length"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "ip_flags"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "tcp_len"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "tcp_ack"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "tcp_flags"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 9
+            }
+          }
+        }
+      }
+      members {
+        name: "tcp_window_size"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "udp_len"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "icmp_type"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 8
+            }
+          }
+        }
+      }
+      members {
+        name: "srcPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "dstPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "src_ip"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "dst_ip"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "ip_upper_protocol"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 8
+            }
+          }
+        }
+      }
+    }
+  }
+}

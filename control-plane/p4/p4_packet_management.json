@@ -1,0 +1,4416 @@
+{
+  "header_types" : [
+    {
+      "name" : "scalars_0",
+      "id" : 0,
+      "fields" : [
+        ["tmp", 48, false],
+        ["tmp_2", 16, false],
+        ["tmp_3", 16, false],
+        ["tmp_4", 16, false],
+        ["tmp_5", 32, false],
+        ["tmp_6", 9, false],
+        ["tmp_7", 16, false],
+        ["tmp_8", 16, false],
+        ["tmp_9", 8, false],
+        ["tmp_10", 16, false],
+        ["tmp_11", 16, false],
+        ["tmp_12", 32, false],
+        ["tmp_13", 32, false],
+        ["tmp_14", 8, false],
+        ["tmp_15", 17, false],
+        ["tmp_16", 32, false],
+        ["tmp_17", 32, false],
+        ["tmp_18", 32, false],
+        ["tmp_19", 32, false],
+        ["tmp_20", 32, false],
+        ["tmp_21", 32, false],
+        ["tmp_22", 32, false],
+        ["tmp_23", 32, false],
+        ["tmp_24", 32, false],
+        ["tmp_25", 32, false],
+        ["tmp_26", 32, false],
+        ["tmp_27", 32, false],
+        ["tmp_28", 32, false],
+        ["tmp_29", 32, false],
+        ["tmp_30", 100, false],
+        ["tmp_31", 17, false],
+        ["tmp_32", 32, false],
+        ["tmp_33", 32, false],
+        ["tmp_34", 32, false],
+        ["tmp_35", 32, false],
+        ["tmp_36", 32, false],
+        ["tmp_37", 32, false],
+        ["tmp_38", 32, false],
+        ["tmp_39", 32, false],
+        ["tmp_40", 32, false],
+        ["tmp_41", 32, false],
+        ["tmp_42", 32, false],
+        ["tmp_43", 32, false],
+        ["tmp_44", 32, false],
+        ["tmp_45", 32, false],
+        ["tmp_46", 100, false],
+        ["block_new_features_0", 1, false],
+        ["block_of_registers_value_0", 1, false],
+        ["packet_counter_value_0", 17, false],
+        ["sampling_counter_value_0", 4, false],
+        ["sampling_treshold_value_0", 4, false],
+        ["tmp_0", 100, false],
+        ["tmp_1", 100, false],
+        ["userMetadata.ingress_timestamp", 48, false],
+        ["userMetadata.packet_length", 16, false],
+        ["userMetadata.ip_flags", 16, false],
+        ["userMetadata.tcp_len", 16, false],
+        ["userMetadata.tcp_ack", 32, false],
+        ["userMetadata.tcp_flags", 9, false],
+        ["userMetadata.tcp_window_size", 16, false],
+        ["userMetadata.udp_len", 16, false],
+        ["userMetadata.icmp_type", 8, false],
+        ["userMetadata.srcPort", 16, false],
+        ["userMetadata.dstPort", 16, false],
+        ["userMetadata.src_ip", 32, false],
+        ["userMetadata.dst_ip", 32, false],
+        ["userMetadata.ip_upper_protocol", 8, false],
+        ["_padding_0", 1, false]
+      ]
+    },
+    {
+      "name" : "standard_metadata",
+      "id" : 1,
+      "fields" : [
+        ["ingress_port", 9, false],
+        ["egress_spec", 9, false],
+        ["egress_port", 9, false],
+        ["instance_type", 32, false],
+        ["packet_length", 32, false],
+        ["enq_timestamp", 32, false],
+        ["enq_qdepth", 19, false],
+        ["deq_timedelta", 32, false],
+        ["deq_qdepth", 19, false],
+        ["ingress_global_timestamp", 48, false],
+        ["egress_global_timestamp", 48, false],
+        ["mcast_grp", 16, false],
+        ["egress_rid", 16, false],
+        ["checksum_error", 1, false],
+        ["parser_error", 32, false],
+        ["priority", 3, false],
+        ["_padding", 3, false]
+      ]
+    },
+    {
+      "name" : "ethernet_t",
+      "id" : 2,
+      "fields" : [
+        ["dstAddr", 48, false],
+        ["srcAddr", 48, false],
+        ["etherType", 16, false]
+      ]
+    },
+    {
+      "name" : "ipv4_t",
+      "id" : 3,
+      "fields" : [
+        ["version", 4, false],
+        ["ihl", 4, false],
+        ["diffserv", 8, false],
+        ["totalLen", 16, false],
+        ["identification", 16, false],
+        ["flags", 3, false],
+        ["fragOffset", 13, false],
+        ["ttl", 8, false],
+        ["protocol", 8, false],
+        ["hdrChecksum", 16, false],
+        ["srcAddr", 32, false],
+        ["dstAddr", 32, false]
+      ]
+    },
+    {
+      "name" : "tcp_t",
+      "id" : 4,
+      "fields" : [
+        ["srcPort", 16, false],
+        ["dstPort", 16, false],
+        ["seqNo", 32, false],
+        ["ackNo", 32, false],
+        ["dataOffset", 4, false],
+        ["res", 3, false],
+        ["tcp_flags", 9, false],
+        ["window", 16, false],
+        ["checksum", 16, false],
+        ["urgentPtr", 16, false]
+      ]
+    },
+    {
+      "name" : "udp_t",
+      "id" : 5,
+      "fields" : [
+        ["srcPort", 16, false],
+        ["dstPort", 16, false],
+        ["udplen", 16, false],
+        ["udpchk", 16, false]
+      ]
+    },
+    {
+      "name" : "icmp_t",
+      "id" : 6,
+      "fields" : [
+        ["type", 8, false],
+        ["code", 8, false],
+        ["checksum", 16, false]
+      ]
+    }
+  ],
+  "headers" : [
+    {
+      "name" : "scalars",
+      "id" : 0,
+      "header_type" : "scalars_0",
+      "metadata" : true,
+      "pi_omit" : true
+    },
+    {
+      "name" : "standard_metadata",
+      "id" : 1,
+      "header_type" : "standard_metadata",
+      "metadata" : true,
+      "pi_omit" : true
+    },
+    {
+      "name" : "ethernet",
+      "id" : 2,
+      "header_type" : "ethernet_t",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "ipv4",
+      "id" : 3,
+      "header_type" : "ipv4_t",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "tcp",
+      "id" : 4,
+      "header_type" : "tcp_t",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "udp",
+      "id" : 5,
+      "header_type" : "udp_t",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "icmp",
+      "id" : 6,
+      "header_type" : "icmp_t",
+      "metadata" : false,
+      "pi_omit" : true
+    }
+  ],
+  "header_stacks" : [],
+  "header_union_types" : [],
+  "header_unions" : [],
+  "header_union_stacks" : [],
+  "field_lists" : [],
+  "errors" : [
+    ["NoError", 0],
+    ["PacketTooShort", 1],
+    ["NoMatch", 2],
+    ["StackOutOfBounds", 3],
+    ["HeaderTooShort", 4],
+    ["ParserTimeout", 5],
+    ["ParserInvalidArgument", 6]
+  ],
+  "enums" : [],
+  "parsers" : [
+    {
+      "name" : "parser",
+      "id" : 0,
+      "init_state" : "start",
+      "parse_states" : [
+        {
+          "name" : "start",
+          "id" : 0,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "ethernet"
+                }
+              ],
+              "op" : "extract"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x0800",
+              "mask" : null,
+              "next_state" : "parse_ipv4"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "etherType"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_ipv4",
+          "id" : 1,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "ipv4"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.ingress_timestamp"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["standard_metadata", "ingress_global_timestamp"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.packet_length"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["ipv4", "totalLen"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.ip_flags"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "|",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "<<",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "&",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["ipv4", "flags"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xffff"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xd"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xffff"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "field",
+                                "value" : ["ipv4", "fragOffset"]
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x3fff"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_len"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_ack"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x00000000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_flags"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_window_size"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.udp_len"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.icmp_type"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x00"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.srcPort"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.dstPort"]
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x0000"
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.src_ip"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["ipv4", "srcAddr"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.dst_ip"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["ipv4", "dstAddr"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.ip_upper_protocol"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["ipv4", "protocol"]
+                }
+              ],
+              "op" : "set"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x01",
+              "mask" : null,
+              "next_state" : "parse_icmp"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x06",
+              "mask" : null,
+              "next_state" : "parse_tcp"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x11",
+              "mask" : null,
+              "next_state" : "parse_udp"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "protocol"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_icmp",
+          "id" : 2,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "icmp"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.icmp_type"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["icmp", "type"]
+                }
+              ],
+              "op" : "set"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_tcp",
+          "id" : 3,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "tcp"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_len"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "-",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "-",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["ipv4", "totalLen"]
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "&",
+                                              "left" : {
+                                                "type" : "field",
+                                                "value" : ["ipv4", "ihl"]
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xffff"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x2"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "<<",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["tcp", "dataOffset"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0x2"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_ack"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["tcp", "ackNo"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_flags"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["tcp", "tcp_flags"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.tcp_window_size"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["tcp", "window"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.srcPort"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["tcp", "srcPort"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.dstPort"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["tcp", "dstPort"]
+                }
+              ],
+              "op" : "set"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_udp",
+          "id" : 4,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "udp"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.udp_len"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["udp", "udplen"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.srcPort"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["udp", "srcPort"]
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.dstPort"]
+                },
+                {
+                  "type" : "field",
+                  "value" : ["udp", "dstPort"]
+                }
+              ],
+              "op" : "set"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        }
+      ]
+    }
+  ],
+  "parse_vsets" : [],
+  "deparsers" : [
+    {
+      "name" : "deparser",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 225,
+        "column" : 8,
+        "source_fragment" : "MyDeparser"
+      },
+      "order" : ["ethernet", "ipv4", "icmp", "udp", "tcp"],
+      "primitives" : []
+    }
+  ],
+  "meter_arrays" : [],
+  "counter_arrays" : [],
+  "register_arrays" : [
+    {
+      "name" : "time0",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 5,
+        "column" : 26,
+        "source_fragment" : "time0"
+      },
+      "size" : 131072,
+      "bitwidth" : 48
+    },
+    {
+      "name" : "packet_length0",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 6,
+        "column" : 26,
+        "source_fragment" : "packet_length0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "ip_flags0",
+      "id" : 2,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 7,
+        "column" : 26,
+        "source_fragment" : "ip_flags0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "tcp_len0",
+      "id" : 3,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 8,
+        "column" : 26,
+        "source_fragment" : "tcp_len0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "tcp_ack0",
+      "id" : 4,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 9,
+        "column" : 26,
+        "source_fragment" : "tcp_ack0"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "tcp_flags0",
+      "id" : 5,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 10,
+        "column" : 25,
+        "source_fragment" : "tcp_flags0"
+      },
+      "size" : 131072,
+      "bitwidth" : 9
+    },
+    {
+      "name" : "tcp_window_size0",
+      "id" : 6,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 11,
+        "column" : 26,
+        "source_fragment" : "tcp_window_size0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "udp_len0",
+      "id" : 7,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 12,
+        "column" : 26,
+        "source_fragment" : "udp_len0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "icmp_type0",
+      "id" : 8,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 13,
+        "column" : 25,
+        "source_fragment" : "icmp_type0"
+      },
+      "size" : 131072,
+      "bitwidth" : 8
+    },
+    {
+      "name" : "dst_port0",
+      "id" : 9,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 16,
+        "column" : 26,
+        "source_fragment" : "dst_port0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "src_port0",
+      "id" : 10,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 17,
+        "column" : 26,
+        "source_fragment" : "src_port0"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "src_ip0",
+      "id" : 11,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 18,
+        "column" : 26,
+        "source_fragment" : "src_ip0"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "dst_ip0",
+      "id" : 12,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 19,
+        "column" : 26,
+        "source_fragment" : "dst_ip0"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "ip_upper_protocol0",
+      "id" : 13,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 20,
+        "column" : 25,
+        "source_fragment" : "ip_upper_protocol0"
+      },
+      "size" : 131072,
+      "bitwidth" : 8
+    },
+    {
+      "name" : "packet_counter0",
+      "id" : 14,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 21,
+        "column" : 21,
+        "source_fragment" : "packet_counter0"
+      },
+      "size" : 1,
+      "bitwidth" : 17
+    },
+    {
+      "name" : "time1",
+      "id" : 15,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 30,
+        "column" : 26,
+        "source_fragment" : "time1"
+      },
+      "size" : 131072,
+      "bitwidth" : 48
+    },
+    {
+      "name" : "packet_length1",
+      "id" : 16,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 31,
+        "column" : 26,
+        "source_fragment" : "packet_length1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "ip_flags1",
+      "id" : 17,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 32,
+        "column" : 26,
+        "source_fragment" : "ip_flags1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "tcp_len1",
+      "id" : 18,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 33,
+        "column" : 26,
+        "source_fragment" : "tcp_len1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "tcp_ack1",
+      "id" : 19,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 34,
+        "column" : 26,
+        "source_fragment" : "tcp_ack1"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "tcp_flags1",
+      "id" : 20,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 35,
+        "column" : 25,
+        "source_fragment" : "tcp_flags1"
+      },
+      "size" : 131072,
+      "bitwidth" : 9
+    },
+    {
+      "name" : "tcp_window_size1",
+      "id" : 21,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 36,
+        "column" : 26,
+        "source_fragment" : "tcp_window_size1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "udp_len1",
+      "id" : 22,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 37,
+        "column" : 26,
+        "source_fragment" : "udp_len1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "icmp_type1",
+      "id" : 23,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 38,
+        "column" : 25,
+        "source_fragment" : "icmp_type1"
+      },
+      "size" : 131072,
+      "bitwidth" : 8
+    },
+    {
+      "name" : "dst_port1",
+      "id" : 24,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 41,
+        "column" : 26,
+        "source_fragment" : "dst_port1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "src_port1",
+      "id" : 25,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 42,
+        "column" : 26,
+        "source_fragment" : "src_port1"
+      },
+      "size" : 131072,
+      "bitwidth" : 16
+    },
+    {
+      "name" : "src_ip1",
+      "id" : 26,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 43,
+        "column" : 26,
+        "source_fragment" : "src_ip1"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "dst_ip1",
+      "id" : 27,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 44,
+        "column" : 26,
+        "source_fragment" : "dst_ip1"
+      },
+      "size" : 131072,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "ip_upper_protocol1",
+      "id" : 28,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 45,
+        "column" : 25,
+        "source_fragment" : "ip_upper_protocol1"
+      },
+      "size" : 131072,
+      "bitwidth" : 8
+    },
+    {
+      "name" : "packet_counter1",
+      "id" : 29,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 46,
+        "column" : 21,
+        "source_fragment" : "packet_counter1"
+      },
+      "size" : 1,
+      "bitwidth" : 17
+    },
+    {
+      "name" : "block_writing",
+      "id" : 30,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 53,
+        "column" : 20,
+        "source_fragment" : "block_writing"
+      },
+      "size" : 1,
+      "bitwidth" : 1
+    },
+    {
+      "name" : "block_of_registers",
+      "id" : 31,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 54,
+        "column" : 20,
+        "source_fragment" : "block_of_registers"
+      },
+      "size" : 1,
+      "bitwidth" : 1
+    },
+    {
+      "name" : "sampling_counter",
+      "id" : 32,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 55,
+        "column" : 20,
+        "source_fragment" : "sampling_counter"
+      },
+      "size" : 1,
+      "bitwidth" : 4
+    },
+    {
+      "name" : "sampling_treshold",
+      "id" : 33,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 56,
+        "column" : 20,
+        "source_fragment" : "sampling_treshold"
+      },
+      "size" : 1,
+      "bitwidth" : 4
+    },
+    {
+      "name" : "not_foldable_counter0",
+      "id" : 34,
+      "source_info" : {
+        "filename" : "../p4/includes/registers.p4",
+        "line" : 58,
+        "column" : 22,
+        "source_fragment" : "not_foldable_counter0"
+      },
+      "size" : 1,
+      "bitwidth" : 100
+    },
+    {
+      "name" : "not_foldable_counter1",
+      "id" : 35,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 20,
+        "column" : 22,
+        "source_fragment" : "not_foldable_counter1"
+      },
+      "size" : 1,
+      "bitwidth" : 100
+    }
+  ],
+  "calculations" : [
+    {
+      "name" : "calc",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 201,
+        "column" : 4,
+        "source_fragment" : "update_checksum( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "version"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ihl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "diffserv"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "totalLen"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "identification"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "flags"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "fragOffset"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ttl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "protocol"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        }
+      ]
+    }
+  ],
+  "learn_lists" : [
+    {
+      "id" : 1,
+      "name" : "digest_t",
+      "elements" : [
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_2"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_3"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_4"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_5"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_6"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_7"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_8"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_9"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_10"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_11"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_12"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_13"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "tmp_14"]
+        }
+      ]
+    }
+  ],
+  "actions" : [
+    {
+      "name" : "NoAction",
+      "id" : 0,
+      "runtime_data" : [],
+      "primitives" : []
+    },
+    {
+      "name" : "MyIngress.drop",
+      "id" : 1,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 37,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        },
+        {
+          "op" : "exit",
+          "parameters" : [],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 38,
+            "column" : 8,
+            "source_fragment" : "exit"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.send_digest",
+      "id" : 2,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ingress_timestamp"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 43,
+            "column" : 12,
+            "source_fragment" : "meta.ingress_timestamp"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_2"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.packet_length"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 44,
+            "column" : 12,
+            "source_fragment" : "meta.packet_length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_3"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ip_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 45,
+            "column" : 12,
+            "source_fragment" : "meta.ip_flags"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_4"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 46,
+            "column" : 12,
+            "source_fragment" : "meta.tcp_len"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_5"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_ack"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 47,
+            "column" : 12,
+            "source_fragment" : "meta.tcp_ack"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_6"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 48,
+            "column" : 12,
+            "source_fragment" : "meta.tcp_flags"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_7"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_window_size"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 49,
+            "column" : 12,
+            "source_fragment" : "meta.tcp_window_size"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_8"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.udp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 50,
+            "column" : 12,
+            "source_fragment" : "meta.udp_len"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_9"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.icmp_type"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 51,
+            "column" : 12,
+            "source_fragment" : "meta.icmp_type"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_10"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 52,
+            "column" : 12,
+            "source_fragment" : "meta.srcPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_11"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 53,
+            "column" : 12,
+            "source_fragment" : "meta.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_12"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.src_ip"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 54,
+            "column" : 12,
+            "source_fragment" : "meta.src_ip"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_13"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.dst_ip"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 55,
+            "column" : 12,
+            "source_fragment" : "meta.dst_ip"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_14"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ip_upper_protocol"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 56,
+            "column" : 12,
+            "source_fragment" : "meta.ip_upper_protocol"
+          }
+        },
+        {
+          "op" : "generate_digest",
+          "parameters" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x1"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 42,
+            "column" : 8,
+            "source_fragment" : "digest<digest_t>(0, { ..."
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.ipv4_forward",
+      "id" : 3,
+      "runtime_data" : [
+        {
+          "name" : "dstAddr",
+          "bitwidth" : 48
+        },
+        {
+          "name" : "port",
+          "bitwidth" : 9
+        }
+      ],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 1
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 81,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = port"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 82,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.srcAddr = hdr.ethernet.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 0
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 83,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["ipv4", "ttl"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xff"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 84,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management130",
+      "id" : 4,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "packet_counter_value_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "packet_counter0"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 130,
+            "column" : 20,
+            "source_fragment" : "packet_counter0.read(packet_counter_value,0)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_15"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "packet_counter_value_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x01ffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 131,
+            "column" : 53,
+            "source_fragment" : "packet_counter_value+1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "packet_counter0"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_15"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 131,
+            "column" : 28,
+            "source_fragment" : "packet_counter0.write(0, packet_counter_value+1)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_16"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 133,
+            "column" : 28,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "time0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_16"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ingress_timestamp"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 133,
+            "column" : 16,
+            "source_fragment" : "time0.write((bit<32>)packet_counter_value, meta.ingress_timestamp)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_17"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 134,
+            "column" : 37,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "packet_length0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_17"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.packet_length"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 134,
+            "column" : 16,
+            "source_fragment" : "packet_length0.write((bit<32>)packet_counter_value, meta.packet_length)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_18"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 135,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "ip_flags0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_18"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ip_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 135,
+            "column" : 16,
+            "source_fragment" : "ip_flags0.write((bit<32>) packet_counter_value, meta.ip_flags)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_19"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 136,
+            "column" : 35,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_len0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_19"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 136,
+            "column" : 20,
+            "source_fragment" : "tcp_len0.write((bit<32>) packet_counter_value, meta.tcp_len)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_20"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 137,
+            "column" : 35,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_ack0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_20"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_ack"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 137,
+            "column" : 20,
+            "source_fragment" : "tcp_ack0.write((bit<32>) packet_counter_value, meta.tcp_ack)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_21"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 138,
+            "column" : 33,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_flags0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_21"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 138,
+            "column" : 16,
+            "source_fragment" : "tcp_flags0.write((bit<32>) packet_counter_value, meta.tcp_flags)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_22"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 139,
+            "column" : 39,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_window_size0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_22"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_window_size"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 139,
+            "column" : 16,
+            "source_fragment" : "tcp_window_size0.write((bit<32>)packet_counter_value, meta.tcp_window_size)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_23"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 140,
+            "column" : 43,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "udp_len0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_23"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.udp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 140,
+            "column" : 28,
+            "source_fragment" : "udp_len0.write((bit<32>) packet_counter_value, meta.udp_len)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_24"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 141,
+            "column" : 45,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "icmp_type0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_24"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.icmp_type"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 141,
+            "column" : 28,
+            "source_fragment" : "icmp_type0.write((bit<32>) packet_counter_value, meta.icmp_type)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_25"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 142,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "dst_port0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_25"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 142,
+            "column" : 16,
+            "source_fragment" : "dst_port0.write((bit<32>) packet_counter_value, hdr.tcp.dstPort)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_26"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 143,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "src_port0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_26"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 143,
+            "column" : 16,
+            "source_fragment" : "src_port0.write((bit<32>) packet_counter_value, hdr.tcp.srcPort)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_27"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 144,
+            "column" : 30,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "src_ip0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_27"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 144,
+            "column" : 16,
+            "source_fragment" : "src_ip0.write((bit<32>) packet_counter_value, hdr.ipv4.srcAddr)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_28"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 145,
+            "column" : 30,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "dst_ip0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_28"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 145,
+            "column" : 16,
+            "source_fragment" : "dst_ip0.write((bit<32>) packet_counter_value, hdr.ipv4.dstAddr)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_29"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 146,
+            "column" : 45,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "ip_upper_protocol0"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_29"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "protocol"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 146,
+            "column" : 20,
+            "source_fragment" : "ip_upper_protocol0.write((bit<32>) packet_counter_value, hdr.ipv4.protocol)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "not_foldable_counter0"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 149,
+            "column" : 28,
+            "source_fragment" : "not_foldable_counter0.read(tmp,0)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_30"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "tmp_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000000000000000000000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0fffffffffffffffffffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 150,
+            "column" : 58,
+            "source_fragment" : "tmp+1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "not_foldable_counter0"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_30"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 150,
+            "column" : 28,
+            "source_fragment" : "not_foldable_counter0.write(0,tmp+1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management154",
+      "id" : 5,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "packet_counter_value_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "packet_counter1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 154,
+            "column" : 20,
+            "source_fragment" : "packet_counter1.read(packet_counter_value,0)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_31"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "packet_counter_value_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x01ffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 155,
+            "column" : 53,
+            "source_fragment" : "packet_counter_value+1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "packet_counter1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_31"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 155,
+            "column" : 28,
+            "source_fragment" : "packet_counter1.write(0, packet_counter_value+1)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_32"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 157,
+            "column" : 28,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "time1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_32"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ingress_timestamp"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 157,
+            "column" : 16,
+            "source_fragment" : "time1.write((bit<32>)packet_counter_value, meta.ingress_timestamp)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_33"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 158,
+            "column" : 37,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "packet_length1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_33"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.packet_length"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 158,
+            "column" : 16,
+            "source_fragment" : "packet_length1.write((bit<32>)packet_counter_value, meta.packet_length)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_34"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 159,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "ip_flags1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_34"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.ip_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 159,
+            "column" : 16,
+            "source_fragment" : "ip_flags1.write((bit<32>) packet_counter_value, meta.ip_flags)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_35"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 160,
+            "column" : 35,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_len1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_35"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 160,
+            "column" : 20,
+            "source_fragment" : "tcp_len1.write((bit<32>) packet_counter_value, meta.tcp_len)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_36"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 161,
+            "column" : 35,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_ack1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_36"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_ack"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 161,
+            "column" : 20,
+            "source_fragment" : "tcp_ack1.write((bit<32>) packet_counter_value, meta.tcp_ack)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_37"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 162,
+            "column" : 33,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_flags1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_37"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_flags"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 162,
+            "column" : 16,
+            "source_fragment" : "tcp_flags1.write((bit<32>) packet_counter_value, meta.tcp_flags)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_38"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 163,
+            "column" : 39,
+            "source_fragment" : "(bit<32>)packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "tcp_window_size1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_38"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.tcp_window_size"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 163,
+            "column" : 16,
+            "source_fragment" : "tcp_window_size1.write((bit<32>)packet_counter_value, meta.tcp_window_size)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_39"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 164,
+            "column" : 43,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "udp_len1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_39"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.udp_len"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 164,
+            "column" : 28,
+            "source_fragment" : "udp_len1.write((bit<32>) packet_counter_value, meta.udp_len)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_40"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 165,
+            "column" : 45,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "icmp_type1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_40"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.icmp_type"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 165,
+            "column" : 28,
+            "source_fragment" : "icmp_type1.write((bit<32>) packet_counter_value, meta.icmp_type)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_41"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 166,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "dst_port1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_41"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 166,
+            "column" : 16,
+            "source_fragment" : "dst_port1.write((bit<32>) packet_counter_value, hdr.tcp.dstPort)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_42"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 167,
+            "column" : 32,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "src_port1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_42"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 167,
+            "column" : 16,
+            "source_fragment" : "src_port1.write((bit<32>) packet_counter_value, hdr.tcp.srcPort)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_43"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 168,
+            "column" : 30,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "src_ip1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_43"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 168,
+            "column" : 16,
+            "source_fragment" : "src_ip1.write((bit<32>) packet_counter_value, hdr.ipv4.srcAddr)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_44"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 169,
+            "column" : 30,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "dst_ip1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_44"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 169,
+            "column" : 16,
+            "source_fragment" : "dst_ip1.write((bit<32>) packet_counter_value, hdr.ipv4.dstAddr)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_45"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "packet_counter_value_0"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 170,
+            "column" : 45,
+            "source_fragment" : "(bit<32>) packet_counter_value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "ip_upper_protocol1"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_45"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "protocol"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 170,
+            "column" : 20,
+            "source_fragment" : "ip_upper_protocol1.write((bit<32>) packet_counter_value, hdr.ipv4.protocol)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_1"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "not_foldable_counter1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 173,
+            "column" : 28,
+            "source_fragment" : "not_foldable_counter1.read(tmp,0)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_46"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "tmp_1"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000000000000000000000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0fffffffffffffffffffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 174,
+            "column" : 58,
+            "source_fragment" : "tmp+1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "not_foldable_counter1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_46"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 174,
+            "column" : 28,
+            "source_fragment" : "not_foldable_counter1.write(0,tmp+1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management126",
+      "id" : 6,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "sampling_counter"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 126,
+            "column" : 24,
+            "source_fragment" : "sampling_counter.write(0, 0)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "block_of_registers_value_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "block_of_registers"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 128,
+            "column" : 24,
+            "source_fragment" : "block_of_registers.read(block_of_registers_value,0)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management120",
+      "id" : 7,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "sampling_treshold_value_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "sampling_treshold"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 120,
+            "column" : 16,
+            "source_fragment" : "sampling_treshold.read(sampling_treshold_value,0)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "sampling_counter_value_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "sampling_counter"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 121,
+            "column" : 16,
+            "source_fragment" : "sampling_counter.read(sampling_counter_value,0)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "sampling_counter_value_0"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "sampling_counter_value_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x01"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0f"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 122,
+            "column" : 16,
+            "source_fragment" : "sampling_counter_value=sampling_counter_value+1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "sampling_counter"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "sampling_counter_value_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 123,
+            "column" : 16,
+            "source_fragment" : "sampling_counter.write(0, sampling_counter_value)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management117",
+      "id" : 8,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "block_new_features_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "block_writing"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 117,
+            "column" : 12,
+            "source_fragment" : "block_writing.read(block_new_features,0)"
+          }
+        }
+      ]
+    }
+  ],
+  "pipelines" : [
+    {
+      "name" : "ingress",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 32,
+        "column" : 8,
+        "source_fragment" : "MyIngress"
+      },
+      "init_table" : "node_2",
+      "tables" : [
+        {
+          "name" : "MyIngress.ipv4_lpm",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 87,
+            "column" : 10,
+            "source_fragment" : "ipv4_lpm"
+          },
+          "key" : [
+            {
+              "match_type" : "lpm",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "lpm",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : true,
+          "direct_meters" : null,
+          "action_ids" : [3, 1, 0],
+          "actions" : ["MyIngress.ipv4_forward", "MyIngress.drop", "NoAction"],
+          "base_default_next" : "tbl_p4_packet_management117",
+          "next_tables" : {
+            "MyIngress.ipv4_forward" : "tbl_p4_packet_management117",
+            "MyIngress.drop" : "tbl_p4_packet_management117",
+            "NoAction" : "tbl_p4_packet_management117"
+          },
+          "default_entry" : {
+            "action_id" : 1,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management117",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 117,
+            "column" : 12,
+            "source_fragment" : "block_writing.read(block_new_features,0)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [8],
+          "actions" : ["p4_packet_management117"],
+          "base_default_next" : "node_5",
+          "next_tables" : {
+            "p4_packet_management117" : "node_5"
+          },
+          "default_entry" : {
+            "action_id" : 8,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management120",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 120,
+            "column" : 16,
+            "source_fragment" : "sampling_treshold.read(sampling_treshold_value,0); ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [7],
+          "actions" : ["p4_packet_management120"],
+          "base_default_next" : "node_7",
+          "next_tables" : {
+            "p4_packet_management120" : "node_7"
+          },
+          "default_entry" : {
+            "action_id" : 7,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management126",
+          "id" : 3,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 126,
+            "column" : 24,
+            "source_fragment" : "sampling_counter.write(0, 0); // Reset sampling counter ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [6],
+          "actions" : ["p4_packet_management126"],
+          "base_default_next" : "node_9",
+          "next_tables" : {
+            "p4_packet_management126" : "node_9"
+          },
+          "default_entry" : {
+            "action_id" : 6,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management130",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 130,
+            "column" : 20,
+            "source_fragment" : "packet_counter0.read(packet_counter_value,0); ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [4],
+          "actions" : ["p4_packet_management130"],
+          "base_default_next" : "tbl_send_digest",
+          "next_tables" : {
+            "p4_packet_management130" : "tbl_send_digest"
+          },
+          "default_entry" : {
+            "action_id" : 4,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management154",
+          "id" : 5,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 154,
+            "column" : 20,
+            "source_fragment" : "packet_counter1.read(packet_counter_value,0); ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [5],
+          "actions" : ["p4_packet_management154"],
+          "base_default_next" : "tbl_send_digest",
+          "next_tables" : {
+            "p4_packet_management154" : "tbl_send_digest"
+          },
+          "default_entry" : {
+            "action_id" : 5,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_send_digest",
+          "id" : 6,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 178,
+            "column" : 12,
+            "source_fragment" : "send_digest()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [2],
+          "actions" : ["MyIngress.send_digest"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.send_digest" : null
+          },
+          "default_entry" : {
+            "action_id" : 2,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        }
+      ],
+      "action_profiles" : [],
+      "conditionals" : [
+        {
+          "name" : "node_2",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 111,
+            "column" : 12,
+            "source_fragment" : "hdr.ipv4.isValid()"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "d2b",
+              "left" : null,
+              "right" : {
+                "type" : "field",
+                "value" : ["ipv4", "$valid$"]
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "MyIngress.ipv4_lpm"
+        },
+        {
+          "name" : "node_5",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 118,
+            "column" : 15,
+            "source_fragment" : "block_new_features == 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["scalars", "block_new_features_0"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00"
+              }
+            }
+          },
+          "true_next" : "tbl_p4_packet_management120",
+          "false_next" : "tbl_send_digest"
+        },
+        {
+          "name" : "node_7",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 125,
+            "column" : 19,
+            "source_fragment" : "sampling_counter_value == sampling_treshold_value"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["scalars", "sampling_counter_value_0"]
+              },
+              "right" : {
+                "type" : "field",
+                "value" : ["scalars", "sampling_treshold_value_0"]
+              }
+            }
+          },
+          "true_next" : "tbl_p4_packet_management126",
+          "false_next" : "tbl_send_digest"
+        },
+        {
+          "name" : "node_9",
+          "id" : 3,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management.p4",
+            "line" : 129,
+            "column" : 28,
+            "source_fragment" : "block_of_registers_value == 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["scalars", "block_of_registers_value_0"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00"
+              }
+            }
+          },
+          "true_next" : "tbl_p4_packet_management130",
+          "false_next" : "tbl_p4_packet_management154"
+        }
+      ]
+    },
+    {
+      "name" : "egress",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 187,
+        "column" : 8,
+        "source_fragment" : "MyEgress"
+      },
+      "init_table" : null,
+      "tables" : [],
+      "action_profiles" : [],
+      "conditionals" : []
+    }
+  ],
+  "checksums" : [
+    {
+      "name" : "cksum",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "../p4/p4_packet_management.p4",
+        "line" : 201,
+        "column" : 4,
+        "source_fragment" : "update_checksum( ..."
+      },
+      "target" : ["ipv4", "hdrChecksum"],
+      "type" : "generic",
+      "calculation" : "calc",
+      "verify" : false,
+      "update" : true,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["ipv4", "$valid$"]
+          }
+        }
+      }
+    }
+  ],
+  "force_arith" : [],
+  "extern_instances" : [],
+  "field_aliases" : [
+    [
+      "queueing_metadata.enq_timestamp",
+      ["standard_metadata", "enq_timestamp"]
+    ],
+    [
+      "queueing_metadata.enq_qdepth",
+      ["standard_metadata", "enq_qdepth"]
+    ],
+    [
+      "queueing_metadata.deq_timedelta",
+      ["standard_metadata", "deq_timedelta"]
+    ],
+    [
+      "queueing_metadata.deq_qdepth",
+      ["standard_metadata", "deq_qdepth"]
+    ],
+    [
+      "intrinsic_metadata.ingress_global_timestamp",
+      ["standard_metadata", "ingress_global_timestamp"]
+    ],
+    [
+      "intrinsic_metadata.egress_global_timestamp",
+      ["standard_metadata", "egress_global_timestamp"]
+    ],
+    [
+      "intrinsic_metadata.mcast_grp",
+      ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.egress_rid",
+      ["standard_metadata", "egress_rid"]
+    ],
+    [
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
+    ]
+  ],
+  "program" : "../p4/p4_packet_management.p4i",
+  "__meta__" : {
+    "version" : [2, 23],
+    "compiler" : "https://github.com/p4lang/p4c"
+  }
+}
