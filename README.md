@@ -2,23 +2,25 @@
 
 ## How to run it
 
-1. Start mininet
+1. Start mininet - in the control plane folder
 
 ```console
 make topo
 ```
 
-2. Start the controller (in another terminal)
+2. Start the controller (in another terminal) - in the control plane folder
 
 ```console
 make ctrl
 ```
 
-3. Start sending packets (from mininet)
+3. Start sending packets (from mininet) to simulate the attack - in the lucid folder
 
 ```console
-h1 ./send.py 10.0.1.2
+./attack.sh
 ```
+
+4. Hopefully see some digests in stdio - which I don't :(
 
 ### Useful links
 
