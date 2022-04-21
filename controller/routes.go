@@ -42,6 +42,7 @@ type rule struct {
 type config struct {
 	Rules   []rule
 	Program string
+	Digest  string
 }
 
 func (route *Rule) toBytes() RuleBytes {
@@ -130,4 +131,9 @@ func GetRulesBytes(routes []Rule) []RuleBytes {
 func (sw *GrpcSwitch) GetProgram() string {
 	config := parseConfig(sw.configName, sw.GetName())
 	return config.Program
+}
+
+func (sw *GrpcSwitch) GetDigest() string {
+	config := parseConfig(sw.configName, sw.GetName())
+	return config.Digest
 }

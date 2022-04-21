@@ -58,7 +58,7 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 		return err
 	}
 	sw.addRoutes()
-	sw.enableDigest(digestName)
+	sw.enableDigest()
 	time.Sleep(defaultWait)
 	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
 		return err
@@ -78,7 +78,12 @@ func (sw *GrpcSwitch) readBin() []byte {
 	return readFileBytes(p4Bin)
 }
 
-func (sw *GrpcSwitch) enableDigest(digestName string) error {
+func (sw *GrpcSwitch) enableDigest() error {
+	digestName := sw.GetDigest()
+	if digestName == "" {
+		sw.log.Debug("Digest not enabled")
+		return nil
+	}
 	digestConfig := &p4_v1.DigestEntry_Config{
 		MaxTimeoutNs: 0,
 		MaxListSize:  1,
