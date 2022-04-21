@@ -1,9 +1,9 @@
-p4program = simple
-p4program-alt = simple1
+p4config = config.json
+p4config-alt = config-alt.json
 
 all: debug
 debug:
-	go run . -n 3 -program $(p4program) -program-alt $(p4program-alt) -verbose
+	go run . -n 3 -config $(p4config) -config-alt $(p4config-alt) -verbose
 prod:
-	go run . -n 3 -program $(p4program) -program-alt $(p4program-alt)
+	go run . -n 3 -config $(p4config) -config-alt $(p4config-alt)
 

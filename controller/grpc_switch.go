@@ -4,6 +4,7 @@ import (
 	"controller/pkg/client"
 	"controller/pkg/util/conversion"
 	"net"
+	"strconv"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -83,4 +84,8 @@ func (sw *GrpcSwitch) handleIdleTimeout(notification *p4_v1.IdleTimeoutNotificat
 		}
 		sw.log.Infof("Remvd ipv4_drop entry: %d", entry.Match[0].GetExact().Value)
 	}
+}
+
+func (sw *GrpcSwitch) GetName() string {
+	return "s" + strconv.FormatUint(sw.id, 10)
 }

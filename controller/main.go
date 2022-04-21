@@ -30,13 +30,13 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "Enable verbose mode with debug log messages")
 	var trace bool
 	flag.BoolVar(&trace, "trace", false, "Enable trace mode with log messages")
-	var programName string
-	flag.StringVar(&programName, "program", "simple", "Program name")
-	var programNameAlt string
-	flag.StringVar(&programNameAlt, "program-alt", "", "Alternative program name")
+	var configName string
+	flag.StringVar(&configName, "config", "simple", "Program name")
+	var configNameAlt string
+	flag.StringVar(&configNameAlt, "config-alt", "", "Alternative config name")
 	flag.Parse()
-	if programNameAlt == "" {
-		programNameAlt = programName
+	if configNameAlt == "" {
+		configNameAlt = configName
 	}
 
 	if verbose {
@@ -50,7 +50,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	switchs := make([]*GrpcSwitch, 0, nDevices)
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(uint64(i+1), programName, 3)
+		sw := createSwitch(uint64(i+1), configName, 3)
 		if err := sw.runSwitch(ctx); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)
@@ -65,16 +65,16 @@ func main() {
 
 	buff := make([]byte, 10)
 	n, _ := os.Stdin.Read(buff)
-	currentProgram := programName
+	currentConfig := configName
 	for n > 0 {
-		if currentProgram == programName {
-			currentProgram = programNameAlt
+		if currentConfig == configName {
+			currentConfig = configNameAlt
 		} else {
-			currentProgram = programName
+			currentConfig = configName
 		}
-		log.Infof("Changing switch config to %s", currentProgram)
+		log.Infof("Changing switch config to %s", currentConfig)
 		for _, sw := range switchs {
-			if err := sw.ChangeConfig(currentProgram); err != nil {
+			if err := sw.ChangeConfig(currentConfig); err != nil {
 				if status.Convert(err).Code() == codes.Canceled {
 					sw.log.Warn("Failed to update config, restarting")
 					if err := sw.runSwitch(ctx); err != nil {

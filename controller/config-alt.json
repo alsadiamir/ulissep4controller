@@ -1,0 +1,71 @@
+{
+  "s1": {
+    "rules": [
+      {
+        "port": 1,
+        "host": "h1",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 2,
+        "host": "h2",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 3,
+        "host": "h3",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      }
+    ],
+    "program": "simple"
+  },
+  "s2": {
+    "rules": [
+      {
+        "port": 1,
+        "host": "h2",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 2,
+        "host": "h1",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 3,
+        "host": "h3",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      }
+    ],
+    "program": "simple"
+  },
+  "s3": {
+    "rules": [
+      {
+        "port": 1,
+        "host": "h3",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 2,
+        "host": "h1",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      },
+      {
+        "port": 3,
+        "host": "h2",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm"
+      }
+    ],
+    "program": "simple"
+  }
+}

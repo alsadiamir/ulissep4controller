@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
-type Route struct {
+type Rule struct {
 	table  string
 	action string
 	ip     string
@@ -19,7 +18,7 @@ type Route struct {
 	port   uint32
 }
 
-type RouteBytes struct {
+type RuleBytes struct {
 	table  string
 	action string
 	ip     []byte
@@ -33,11 +32,23 @@ type host struct {
 	Mac  string
 }
 
-func (route *Route) toBytes() RouteBytes {
+type rule struct {
+	Port   uint32
+	Host   string
+	Action string
+	Table  string
+}
+
+type config struct {
+	Rules   []rule
+	Program string
+}
+
+func (route *Rule) toBytes() RuleBytes {
 	ip, _ := conversion.IpToBinary(route.ip)
 	mac, _ := conversion.MacToBinary(route.mac)
 	port, _ := conversion.UInt32ToBinaryCompressed(route.port)
-	return RouteBytes{
+	return RuleBytes{
 		table:  route.table,
 		action: route.action,
 		ip:     ip,
@@ -71,17 +82,6 @@ func parseHosts(fileName string) []host {
 	return hosts
 }
 
-type route struct {
-	Port   uint32
-	Host   string
-	Action string
-}
-
-type config struct {
-	Routes []route
-	Table  string
-}
-
 func parseConfig(fileName string, swName string) config {
 	// Open our jsonFile
 	jsonFile, err := os.Open(fileName)
@@ -97,18 +97,17 @@ func parseConfig(fileName string, swName string) config {
 	return configs[swName]
 }
 
-func GetRoutes(id uint64, configFile string) []Route {
-	links := make([]Route, 0, 4)
-	swName := "s" + strconv.FormatUint(id, 10)
+func (sw *GrpcSwitch) GetRules() []Rule {
+	links := make([]Rule, 0, 4)
 	hosts := parseHosts("../mininet/topology.json")
-	config := parseConfig(configFile, swName)
+	config := parseConfig(sw.configName, sw.GetName())
 	// foreach link
-	for _, route := range config.Routes {
+	for _, route := range config.Rules {
 		// find the host
 		for _, host := range hosts {
 			if host.name == route.Host {
-				links = append(links, Route{
-					table:  config.Table,
+				links = append(links, Rule{
+					table:  route.Table,
 					action: route.Action,
 					ip:     strings.Split(host.Ip, "/")[0],
 					mac:    host.Mac,
@@ -120,10 +119,15 @@ func GetRoutes(id uint64, configFile string) []Route {
 	return links
 }
 
-func GetRoutesBytes(routes []Route) []RouteBytes {
-	routeBytes := make([]RouteBytes, len(routes))
+func GetRulesBytes(routes []Rule) []RuleBytes {
+	routeBytes := make([]RuleBytes, len(routes))
 	for idx, link := range routes {
 		routeBytes[idx] = link.toBytes()
 	}
 	return routeBytes
+}
+
+func (sw *GrpcSwitch) GetProgram() string {
+	config := parseConfig(sw.configName, sw.GetName())
+	return config.Program
 }

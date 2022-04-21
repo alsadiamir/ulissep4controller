@@ -19,9 +19,7 @@ const (
 )
 
 func (sw *GrpcSwitch) addRoutes() {
-	config := configPath + sw.configName + configExt
-	routes := GetRoutes(sw.id, config)
-	for _, route := range routes {
+	for _, route := range sw.GetRules() {
 		sw.addIpv4Lpm(route.toBytes())
 	}
 }
@@ -37,7 +35,7 @@ func readFileBytes(filePath string) []byte {
 	return bytes
 }
 
-func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
+func (sw *GrpcSwitch) addIpv4Lpm(route RuleBytes) {
 	entry := sw.p4RtC.NewTableEntry(
 		route.table,
 		[]client.MatchInterface{&client.LpmMatch{
@@ -69,12 +67,14 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 }
 
 func (sw *GrpcSwitch) readP4Info() []byte {
-	p4Info := configPath + sw.configName + p4InfoExt
+	p4Info := configPath + sw.GetProgram() + p4InfoExt
+	sw.log.Tracef("p4Info %s", p4Info)
 	return readFileBytes(p4Info)
 }
 
 func (sw *GrpcSwitch) readBin() []byte {
-	p4Bin := configPath + sw.configName + p4BinExt
+	p4Bin := configPath + sw.GetProgram() + p4BinExt
+	sw.log.Tracef("p4Bin %s", p4Bin)
 	return readFileBytes(p4Bin)
 }
 
