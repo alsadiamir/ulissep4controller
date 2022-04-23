@@ -78,11 +78,12 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	sw.log.Debug("Setted forwarding pipe")
 	//
 	sw.errCh = make(chan error, 1)
-	sw.addRoutes()
-	sw.enableDigest()
 	go sw.handleStreamMessages()
 	go sw.startRunner(conn)
-
+	//
+	sw.addRoutes()
+	sw.enableDigest()
+	//
 	sw.log.Debug("Switch configured")
 	return nil
 }
