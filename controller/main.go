@@ -30,13 +30,10 @@ func main() {
 	var trace bool
 	flag.BoolVar(&trace, "trace", false, "Enable trace mode with log messages")
 	var configName string
-	flag.StringVar(&configName, "config", "simple", "Program name")
+	flag.StringVar(&configName, "config", "config.json", "Program name")
 	var configNameAlt string
-	flag.StringVar(&configNameAlt, "config-alt", "", "Alternative config name")
+	flag.StringVar(&configNameAlt, "config-alt", "config-alt.json", "Alternative config name")
 	flag.Parse()
-	if configNameAlt == "" {
-		configNameAlt = configName
-	}
 
 	if verbose {
 		log.SetLevel(log.DebugLevel)
