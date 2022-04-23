@@ -20,7 +20,6 @@ const (
 	packetCounter   = "MyIngress.port_packets_in"
 	packetCountWarn = 20
 	packetCheckRate = 5 * time.Second
-	digestName      = "digest_t"
 )
 
 func main() {
@@ -85,6 +84,7 @@ func main() {
 					sw.log.Errorf("Error updating swConfig: %v", err)
 				}
 			}
+			time.Sleep(defaultWait)
 		}
 		log.Info("Done\nPress enter to change switch config or EOF to terminate")
 		n, _ = os.Stdin.Read(buff)
