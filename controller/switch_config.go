@@ -46,6 +46,7 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RuleBytes) {
 		nil,
 	)
 	if err := sw.p4RtC.InsertTableEntry(entry); err != nil {
+		sw.log.Errorf("Error adding %s entry: %d -> p%d", strings.Split(route.table, ".")[1], route.ip, route.port)
 		sw.errCh <- err
 		return
 	}
