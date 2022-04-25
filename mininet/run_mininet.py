@@ -129,17 +129,20 @@ def main():
     p4json = p4base + ".json"
     p4dir = "/".join(args.p4_file.split("/")[:-1])
 
+    topology = args.topology
+
     result = os.system(f'p4c --target bmv2 --arch v1model --p4runtime-files {p4info} -o {p4dir} {args.p4_file}')
     if result != 0:
         print("Error while compiling!")
         sys.exit()
 
-    runner = TopoRunner("topology.json", p4json, 'simple_switch_grpc')
+    runner = TopoRunner(topology, p4json, 'simple_switch_grpc')
     runner.run_topology()
 
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--p4-file', help='Path to P4 file', type=str, action="store", required=False)
+parser.add_argument('--topology', help='Topology file', type=str, action="store", required=False)
 
 if __name__ == '__main__':
     args = parser.parse_args()
