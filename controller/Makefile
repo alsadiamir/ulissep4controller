@@ -1,5 +1,5 @@
-p4config = config.json
-p4config-alt = config-alt.json
+p4config = ../config/config.json
+p4config-alt = ../config/config-alt.json
 
 all: debug
 debug:

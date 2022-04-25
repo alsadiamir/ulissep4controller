@@ -100,7 +100,7 @@ func parseConfig(fileName string, swName string) config {
 
 func (sw *GrpcSwitch) GetRules() []Rule {
 	links := make([]Rule, 0, 4)
-	hosts := parseHosts("../mininet/topology.json")
+	hosts := parseHosts(p4topology)
 	config := parseConfig(sw.configName, sw.GetName())
 	// foreach link
 	for _, route := range config.Rules {

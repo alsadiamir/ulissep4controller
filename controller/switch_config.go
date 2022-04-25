@@ -12,10 +12,9 @@ import (
 )
 
 const (
-	p4InfoExt  = ".p4info.txt"
-	p4BinExt   = ".json"
-	configExt  = "_config.json"
-	configPath = "../p4/"
+	p4InfoExt = ".p4info.txt"
+	p4BinExt  = ".json"
+	p4Path    = "../p4/"
 )
 
 func (sw *GrpcSwitch) addRoutes() {
@@ -68,13 +67,13 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 }
 
 func (sw *GrpcSwitch) readP4Info() []byte {
-	p4Info := configPath + sw.GetProgram() + p4InfoExt
+	p4Info := p4Path + sw.GetProgram() + p4InfoExt
 	sw.log.Tracef("p4Info %s", p4Info)
 	return readFileBytes(p4Info)
 }
 
 func (sw *GrpcSwitch) readBin() []byte {
-	p4Bin := configPath + sw.GetProgram() + p4BinExt
+	p4Bin := p4Path + sw.GetProgram() + p4BinExt
 	sw.log.Tracef("p4Bin %s", p4Bin)
 	return readFileBytes(p4Bin)
 }
