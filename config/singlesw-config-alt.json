@@ -1,0 +1,20 @@
+{
+  "s1": {
+    "rules": [
+      {
+        "port": 1,
+        "host": "h1",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm1"
+      },
+      {
+        "port": 2,
+        "host": "h2",
+        "action": "MyIngress.ipv4_forward",
+        "table": "MyIngress.ipv4_lpm1"
+      }
+    ],
+    "program": "simple1",
+    "digest": ""
+  }
+}
