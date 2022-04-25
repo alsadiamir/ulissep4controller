@@ -70,24 +70,29 @@ func main() {
 		}
 		log.Infof("Changing switch config to %s", currentConfig)
 		for _, sw := range switchs {
-			if err := sw.ChangeConfig(currentConfig); err != nil {
-				if status.Convert(err).Code() == codes.Canceled {
-					sw.log.Warn("Failed to update config, restarting")
-					if err := sw.runSwitch(ctx); err != nil {
-						sw.log.Errorf("Cannot start")
-						log.Errorf("%v", err)
-					}
-				} else {
-					sw.log.Errorf("Error updating swConfig: %v", err)
-				}
-			}
-			time.Sleep(defaultWait)
+			go changeConfig(ctx, sw, currentConfig)
 		}
-		log.Info("Done\nPress enter to change switch config or EOF to terminate")
+		log.Info("Press enter to change switch config or EOF to terminate")
 		n, _ = os.Stdin.Read(buff)
 	}
 
 	fmt.Println()
 	cancel()
 	time.Sleep(defaultWait)
+}
+
+func changeConfig(ctx context.Context, sw *GrpcSwitch, configName string) {
+	if err := sw.ChangeConfig(configName); err != nil {
+		if status.Convert(err).Code() == codes.Canceled {
+			sw.log.Warn("Failed to update config, restarting")
+			if err := sw.runSwitch(ctx); err != nil {
+				sw.log.Errorf("Cannot start")
+				log.Errorf("%v", err)
+			}
+		} else {
+			sw.log.Errorf("Error updating swConfig: %v", err)
+		}
+		return
+	}
+	sw.log.Tracef("Config updated to %s", configName)
 }
