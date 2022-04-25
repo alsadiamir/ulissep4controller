@@ -66,6 +66,16 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 	return nil
 }
 
+func (sw *GrpcSwitch) ChangeConfigSync(configName string) error {
+	sw.configName = configName
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+		return err
+	}
+	sw.addRoutes()
+	sw.enableDigest()
+	return nil
+}
+
 func (sw *GrpcSwitch) readP4Info() []byte {
 	p4Info := p4Path + sw.GetProgram() + p4InfoExt
 	sw.log.Tracef("p4Info %s", p4Info)
