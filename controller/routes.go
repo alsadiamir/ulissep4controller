@@ -62,7 +62,7 @@ func parseHosts(fileName string) []host {
 	// Open our jsonFile
 	jsonFile, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not parse host file: %s", err)
 	}
 	defer jsonFile.Close()
 	jsonBytes, _ := ioutil.ReadAll(jsonFile)
@@ -87,7 +87,7 @@ func parseConfig(fileName string, swName string) config {
 	// Open our jsonFile
 	jsonFile, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not parse config file %s: %s", fileName, err)
 	}
 	defer jsonFile.Close()
 	jsonBytes, _ := ioutil.ReadAll(jsonFile)
