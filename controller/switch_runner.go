@@ -81,7 +81,7 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	//
 	sw.errCh = make(chan error, 1)
 	go sw.handleStreamMessages()
-	go sw.startRunner(conn)
+	go sw.startRunner()
 	//
 	sw.addRoutes()
 	sw.enableDigest()
@@ -90,11 +90,10 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	return nil
 }
 
-func (sw *GrpcSwitch) startRunner(conn *grpc.ClientConn) {
+func (sw *GrpcSwitch) startRunner() {
 	defer func() {
 		close(sw.messageCh)
 		sw.cancel()
-		conn.Close()
 		sw.log.Info("Stopping")
 	}()
 	for {
