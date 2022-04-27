@@ -12,16 +12,13 @@ import (
 )
 
 const (
-	p4InfoExt  = ".p4info.txt"
-	p4BinExt   = ".json"
-	configExt  = "_config.json"
-	configPath = "../p4/"
+	p4InfoExt = ".p4info.txt"
+	p4BinExt  = ".json"
+	p4Path    = "../p4/"
 )
 
 func (sw *GrpcSwitch) addRoutes() {
-	config := configPath + sw.configName + configExt
-	routes := GetRoutes(sw.id, config)
-	for _, route := range routes {
+	for _, route := range sw.GetRules() {
 		sw.addIpv4Lpm(route.toBytes())
 	}
 }
@@ -37,7 +34,7 @@ func readFileBytes(filePath string) []byte {
 	return bytes
 }
 
-func (sw *GrpcSwitch) addIpv4Lpm(route RouteBytes) {
+func (sw *GrpcSwitch) addIpv4Lpm(route RuleBytes) {
 	entry := sw.p4RtC.NewTableEntry(
 		route.table,
 		[]client.MatchInterface{&client.LpmMatch{
@@ -68,17 +65,34 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 	return nil
 }
 
+func (sw *GrpcSwitch) ChangeConfigSync(configName string) error {
+	sw.configName = configName
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+		return err
+	}
+	sw.addRoutes()
+	sw.enableDigest()
+	return nil
+}
+
 func (sw *GrpcSwitch) readP4Info() []byte {
-	p4Info := configPath + sw.configName + p4InfoExt
+	p4Info := p4Path + sw.GetProgram() + p4InfoExt
+	sw.log.Tracef("p4Info %s", p4Info)
 	return readFileBytes(p4Info)
 }
 
 func (sw *GrpcSwitch) readBin() []byte {
-	p4Bin := configPath + sw.configName + p4BinExt
+	p4Bin := p4Path + sw.GetProgram() + p4BinExt
+	sw.log.Tracef("p4Bin %s", p4Bin)
 	return readFileBytes(p4Bin)
 }
 
-func (sw *GrpcSwitch) enableDigest(digestName string) error {
+func (sw *GrpcSwitch) enableDigest() error {
+	digestName := sw.GetDigest()
+	if digestName == "" {
+		sw.log.Debug("Digest not enabled")
+		return nil
+	}
 	digestConfig := &p4_v1.DigestEntry_Config{
 		MaxTimeoutNs: 0,
 		MaxListSize:  1,

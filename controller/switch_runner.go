@@ -55,7 +55,7 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	if err != nil {
 		return err
 	}
-	sw.log.Infof("Connected, runtime version: %s", resp.P4RuntimeApiVersion)
+	sw.log.Debugf("Connected, runtime version: %s", resp.P4RuntimeApiVersion)
 	// create runtime client
 	electionID := p4_v1.Uint128{High: 0, Low: 1}
 	sw.messageCh = make(chan *p4_v1.StreamMessageResponse, 1000)
@@ -79,14 +79,14 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	}
 	sw.log.Debug("Setted forwarding pipe")
 	//
-	sw.enableDigest(digestName)
-
 	sw.errCh = make(chan error, 1)
-	sw.addRoutes()
 	go sw.handleStreamMessages()
 	go sw.startRunner(conn)
-
-	sw.log.Debug("Switch configured")
+	//
+	sw.addRoutes()
+	sw.enableDigest()
+	//
+	sw.log.Info("Switch started")
 	return nil
 }
 
