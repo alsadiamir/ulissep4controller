@@ -4,6 +4,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/antoninbas/p4runtime-go-client v0.0.0-20220303192900-e8fa35a5aa8b h1:ZIcqbl8GUAqA80d53TlikyS5BIGrUr15d1Jpssby10A=
 github.com/antoninbas/p4runtime-go-client v0.0.0-20220303192900-e8fa35a5aa8b/go.mod h1:NzHBH6Ig6nPZ/yd7HG/d+2J2r9afJYdLzi1VBekDJPo=
+github.com/antoninbas/p4runtime-go-client v0.0.0-20220427185936-f5609a358ca5 h1:td1HRha2zcZbpPiT96hjhK16Gha2Tz3ddVB+Grg7EBQ=
+github.com/antoninbas/p4runtime-go-client v0.0.0-20220427185936-f5609a358ca5/go.mod h1:NzHBH6Ig6nPZ/yd7HG/d+2J2r9afJYdLzi1VBekDJPo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=

@@ -52,22 +52,22 @@ func (sw *GrpcSwitch) addIpv4Lpm(route RuleBytes) {
 }
 
 func (sw *GrpcSwitch) ChangeConfig(configName string) error {
-	// sw.configName = configName
-	// if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
-	// 	return err
-	// }
-	// sw.addRoutes()
-	// sw.enableDigest(digestName)
-	// time.Sleep(defaultWait)
-	// if err := sw.p4RtC.CommitFwdPipe(); err != nil {
-	// 	return err
-	// }
+	sw.configName = configName
+	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.ctx, sw.readBin(), sw.readP4Info(), 0); err != nil {
+		return err
+	}
+	sw.addRoutes()
+	sw.enableDigest()
+	time.Sleep(defaultWait)
+	if _, err := sw.p4RtC.CommitFwdPipe(sw.ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (sw *GrpcSwitch) ChangeConfigSync(configName string) error {
 	sw.configName = configName
-	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.ctx, sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
 	sw.addRoutes()
