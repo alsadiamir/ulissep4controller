@@ -143,9 +143,9 @@ class P4GrpcSwitch(Switch):
             self.cmd(' '.join(args) + ' >' + self.logfile + ' 2>&1 & echo $! >> ' + f.name)
             pid = int(f.read())
         debug("P4 switch {} PID is {}.\n".format(self.name, pid))
-        if not self.check_switch_started(pid):
-            error("P4 switch {} did not start correctly.\n".format(self.name))
-            sys.exit(1)
+        # if not self.check_switch_started(pid):
+        #     error("P4 switch {} did not start correctly.\n".format(self.name))
+        #     sys.exit(1)
         info("P4 switch {} has been started.\n".format(self.name))
 
     def stop(self, _=True):

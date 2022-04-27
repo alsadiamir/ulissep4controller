@@ -11,3 +11,4 @@ mininet:
 	sudo env/bin/python3 run_mininet.py --p4-file ../p4/$(p4program).p4 --topology ../config/$(topology)
 stop:
 	sudo mn -c
+restart: stop mininet
