@@ -34,6 +34,8 @@ func main() {
 	flag.StringVar(&configName, "config", "../config/config.json", "Program name")
 	var configNameAlt string
 	flag.StringVar(&configNameAlt, "config-alt", "", "Alternative config name")
+	var certFile string
+	flag.StringVar(&certFile, "cert-file", "", "Certificate file for tls")
 	flag.Parse()
 
 	if configNameAlt == "" {
@@ -50,7 +52,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	switchs := make([]*GrpcSwitch, 0, nDevices)
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(uint64(i+1), configName, 3)
+		sw := createSwitch(uint64(i+1), configName, 3, certFile)
 		if err := sw.runSwitch(ctx); err != nil {
 			sw.log.Errorf("Cannot start")
 			log.Errorf("%v", err)

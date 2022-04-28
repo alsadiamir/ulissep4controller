@@ -13,4 +13,6 @@ trace:
 	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -trace
 prod:
 	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt)
+tls:
+	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -cert-file /tmp/cert.pem -verbose
 

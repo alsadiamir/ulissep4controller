@@ -13,7 +13,7 @@ from p4_mininet import P4GrpcSwitch, P4Host
 
 class TopoRunner:
 
-    def __init__(self, topo_file, switch_json, bmv2_exe):
+    def __init__(self, topo_file, switch_json, bmv2_exe, cert_file, key_file):
         """ Initializes some attributes and reads the topology json. Does not
             actually run the exercise. Use run_exercise() for that.
 
@@ -28,7 +28,7 @@ class TopoRunner:
         switches = topo['switches']
         links = self.parse_links(topo['links'])
 
-        topo = P4Topo(self.hosts, switches, links, switch_json, bmv2_exe)
+        topo = P4Topo(self.hosts, switches, links, switch_json, bmv2_exe, cert_file, key_file)
         self.net = Mininet(topo=topo,
                            host=P4Host,
                            switch=P4GrpcSwitch,
@@ -85,7 +85,7 @@ class P4Topo(Topo):
 
     """ The mininet topology class for the P4 tutorial exercises"""
 
-    def __init__(self, hosts, switches, links, json_path, bmv2_exe, **opts):
+    def __init__(self, hosts, switches, links, json_path, bmv2_exe, cert_file, key_file, **opts):
         Topo.__init__(self, **opts)
         host_links = []
         switch_links = []
@@ -98,7 +98,8 @@ class P4Topo(Topo):
                 switch_links.append(link)
 
         for i, sw in enumerate(switches, start=1):
-            self.addSwitch(sw, sw_path=bmv2_exe, json_path=json_path, grpc_port=50050+i, device_id=i, cpu_port='255')
+            self.addSwitch(sw, sw_path=bmv2_exe, json_path=json_path, grpc_port=50050+i, device_id=i, cpu_port='255',
+             cert_file=cert_file, key_file=key_file)
 
         for link in host_links:
             host_name = link['node1']
@@ -130,19 +131,23 @@ def main():
     p4dir = "/".join(args.p4_file.split("/")[:-1])
 
     topology = args.topology
+    cert_file = args.cert_file
+    key_file= args.key_file
 
     result = os.system(f'p4c --target bmv2 --arch v1model --p4runtime-files {p4info} -o {p4dir} {args.p4_file}')
     if result != 0:
         print("Error while compiling!")
         sys.exit()
 
-    runner = TopoRunner(topology, p4json, 'simple_switch_grpc')
+    runner = TopoRunner(topology, p4json, 'simple_switch_grpc', cert_file, key_file)
     runner.run_topology()
 
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--p4-file', help='Path to P4 file', type=str, action="store", required=False)
 parser.add_argument('--topology', help='Topology file', type=str, action="store", required=False)
+parser.add_argument('--cert-file', help='Cert file for tls', type=str, action="store", required=False)
+parser.add_argument('--key-file', help='Key file for tls', type=str, action="store", required=False)
 
 if __name__ == '__main__':
     args = parser.parse_args()

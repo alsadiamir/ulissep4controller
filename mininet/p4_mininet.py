@@ -56,15 +56,15 @@ class P4GrpcSwitch(Switch):
     device_id = 0
 
     def __init__(self, name, sw_path=None, json_path=None,
-                 grpc_port=None,
+                 grpc_port=5050,
                  pcap_dump=False,
                  log_console=False,
                  verbose=False,
                  device_id=None,
                  enable_debugger=False,
                  cpu_port=None,
-                 cert_file="/tmp/cert.pem",
-                 key_file="/tmp/key.pem",
+                 cert_file=None,
+                 key_file=None,
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
         assert(sw_path)
@@ -130,11 +130,11 @@ class P4GrpcSwitch(Switch):
             args.append("--debugger")
         if self.log_console:
             args.append("--log-console")
-        if self.grpc_port:
-            grpc_args = ["--", "--grpc-server-addr", "0.0.0.0:"+str(self.grpc_port), "--cpu-port", self.cpu_port]
-            grpc_args.extend(["--grpc-server-ssl", "--grpc-server-cert",
-                             self.cert_file, "--grpc-server-key", self.key_file])
-            args.extend(grpc_args)
+
+        grpc_args = ["--", "--grpc-server-addr", "0.0.0.0:"+str(self.grpc_port), "--cpu-port", self.cpu_port]
+        if (self.cert_file != None and self.key_file != None):
+            grpc_args.extend(["--grpc-server-ssl", "--grpc-server-cert", self.cert_file, "--grpc-server-key", self.key_file])
+        args.extend(grpc_args)
         info(' '.join(args) + "\n")
 
         pid = None
