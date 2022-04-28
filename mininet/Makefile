@@ -1,4 +1,4 @@
-p4program = simple
+p4program = asymmetric
 topology = topology.json
 singlesw = singlesw-topo.json
 

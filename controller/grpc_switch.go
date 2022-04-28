@@ -14,7 +14,7 @@ import (
 const (
 	ipv4_drop_table = "MyIngress.ipv4_drop"
 	ipv4_drop       = "MyIngress.drop"
-	tableTimeout    = 10 * time.Second
+	tableTimeout    = 2 * time.Second
 )
 
 type digest_t struct {
@@ -33,7 +33,7 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 			"dstAddr": digestData.dstAddr,
 			"dstPort": digestData.dstPort,
 		}).Trace()
-		sw.addIpv4Drop(digestData.srcAddr.To4())
+		//sw.addIpv4Drop(digestData.srcAddr.To4())
 	}
 	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
 		sw.errCh <- err
