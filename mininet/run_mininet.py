@@ -134,8 +134,6 @@ def main():
     cert_file = args.cert_file
     key_file= args.key_file
 
-    os.remove(f'{p4dir}/{p4json}')
-    os.remove(f'{p4dir}/{p4info}')
     result = os.system(f'p4c --target bmv2 --arch v1model --p4runtime-files {p4info} -o {p4dir} {args.p4_file}')
     if result != 0:
         print("Error while compiling!")

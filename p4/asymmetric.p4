@@ -3,9 +3,9 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
-#define MAX_TRESHOLD 1000
+#define TRESHOLD 1000000
 //microseconds
-#define WINDOW_SIZE 15000000
+#define WINDOW_SIZE 10000
 
 #define HASH_BASE 10w0
 #define HASH_MAX 10w1023
