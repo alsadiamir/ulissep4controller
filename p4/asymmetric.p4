@@ -3,10 +3,6 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
-typedef bit<10> PortId_t;
-const PortId_t NUM_PORTS = 512;
-#define PACKET_COUNT_WIDTH 32
-#define TRESHOLD 200
 #define MAX_TRESHOLD 1000
 //microseconds
 #define WINDOW_SIZE 15000000
