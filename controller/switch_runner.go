@@ -22,17 +22,19 @@ type GrpcSwitch struct {
 	errCh      chan error
 	ctx        context.Context
 	cancel     context.CancelFunc
+	certFile   string
 	p4RtC      *client.Client
 	messageCh  chan *p4_v1.StreamMessageResponse
 }
 
-func createSwitch(deviceID uint64, configName string, ports int) *GrpcSwitch {
+func createSwitch(deviceID uint64, configName string, ports int, certFile string) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:         deviceID,
 		configName: configName,
 		ports:      ports,
 		addr:       fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:        log.WithField("ID", deviceID),
+		certFile:   certFile,
 	}
 }
 
@@ -41,11 +43,17 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	sw.ctx = ctx
 	sw.cancel = cancel
 	sw.log.Infof("Connecting to server at %s", sw.addr)
-	creds, err := credentials.NewClientTLSFromFile("/tmp/cert.pem", "")
-	if err != nil {
-		return err
+	var option grpc.DialOption
+	if sw.certFile != "" {
+		creds, err := credentials.NewClientTLSFromFile(sw.certFile, "")
+		if err != nil {
+			return err
+		}
+		option = grpc.WithTransportCredentials(creds)
+	} else {
+		option = grpc.WithInsecure()
 	}
-	conn, err := grpc.Dial(sw.addr, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(sw.addr, option)
 	if err != nil {
 		return err
 	}
