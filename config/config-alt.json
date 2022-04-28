@@ -5,21 +5,21 @@
         "port": 1,
         "host": "h1",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm"
+        "table": "MyIngress.ipv4_lpm1"
       },
       {
         "port": 3,
         "host": "h2",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm"
+        "table": "MyIngress.ipv4_lpm1"
       }
     ],
-    "program": "simple",
+    "program": "simple1",
     "digest": ""
   },
   "s2": {
     "rules": [],
-    "program": "simple",
+    "program": "simple1",
     "digest": ""
   },
   "s3": {
@@ -28,16 +28,16 @@
         "port": 1,
         "host": "h1",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm1"
+        "table": "MyIngress.ipv4_lpm"
       },
       {
         "port": 2,
         "host": "h2",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm1"
+        "table": "MyIngress.ipv4_lpm"
       }
     ],
-    "program": "simple1",
+    "program": "simple",
     "digest": ""
   },
   "s4": {
@@ -46,16 +46,16 @@
         "port": 1,
         "host": "h2",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm1"
+        "table": "MyIngress.ipv4_lpm"
       },
       {
         "port": 3,
         "host": "h1",
         "action": "MyIngress.ipv4_forward",
-        "table": "MyIngress.ipv4_lpm1"
+        "table": "MyIngress.ipv4_lpm"
       }
     ],
-    "program": "simple1",
+    "program": "simple",
     "digest": ""
   }
 }
