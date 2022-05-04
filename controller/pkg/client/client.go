@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
+	"time"
 
 	code "google.golang.org/genproto/googleapis/rpc/code"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 
 	p4_config_v1 "github.com/p4lang/p4runtime/go/p4/config/v1"
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -60,11 +64,12 @@ func (c *Client) GetDeviceId() uint64 {
 }
 
 func (c *Client) Run(
-	ctx context.Context,
-	cancel context.CancelFunc,
+	ct context.Context,
+	cc *grpc.ClientConn,
 	arbitrationCh chan<- bool,
 	messageCh chan<- *p4_v1.StreamMessageResponse, // all other stream messages besides arbitration
 ) error {
+	ctx, cancel := context.WithCancel(ct)
 	stream, err := c.StreamChannel(ctx)
 	if err != nil {
 		cancel()
@@ -73,10 +78,29 @@ func (c *Client) Run(
 	defer stream.CloseSend()
 
 	go func() {
+		if !cc.WaitForStateChange(ctx, connectivity.Ready) {
+			return
+		}
+		log.Println("Switch disconnected")
+		for {
+			time.Sleep(time.Second * 5)
+			if cc.GetState() == connectivity.Ready {
+				log.Println("Reconnected")
+				// stopping running goroutine
+				cancel()
+				// restarting switch
+				go c.Run(ct, cc, arbitrationCh, messageCh)
+				return
+			}
+			cc.Connect()
+			log.Println("Trying to reconnect")
+		}
+	}()
+
+	go func() {
 		for {
 			in, err := stream.Recv()
 			if err != nil {
-				cancel()
 				return
 			}
 			arbitration, ok := in.Update.(*p4_v1.StreamMessageResponse_Arbitration)
