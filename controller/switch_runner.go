@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GrpcSwitch struct {
@@ -42,17 +43,16 @@ func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
 	sw.ctx = ctx
 	sw.cancel = cancel
 	sw.log.Infof("Connecting to server at %s", sw.addr)
-	var option grpc.DialOption
+	var creds credentials.TransportCredentials
 	if sw.certFile != "" {
-		creds, err := credentials.NewClientTLSFromFile(sw.certFile, "")
-		if err != nil {
+		var err error
+		if creds, err = credentials.NewClientTLSFromFile(sw.certFile, ""); err != nil {
 			return err
 		}
-		option = grpc.WithTransportCredentials(creds)
 	} else {
-		option = grpc.WithInsecure()
+		creds = insecure.NewCredentials()
 	}
-	conn, err := grpc.Dial(sw.addr, option)
+	conn, err := grpc.Dial(sw.addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return err
 	}
