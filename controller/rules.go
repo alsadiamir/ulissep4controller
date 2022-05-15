@@ -50,7 +50,7 @@ func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) 
 func (sw *GrpcSwitch) GetProgram() string {
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {
-		sw.log.Errorf("Error getting program name: {err}", err)
+		sw.log.Errorf("Error getting program name: %v", err)
 		return ""
 	}
 	return config.Program
@@ -59,7 +59,7 @@ func (sw *GrpcSwitch) GetProgram() string {
 func (sw *GrpcSwitch) GetDigests() []string {
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {
-		sw.log.Errorf("Error getting digest list: {err}", err)
+		sw.log.Errorf("Error getting digest list: %v", err)
 		return make([]string, 0, 0)
 	}
 	return config.Digest
