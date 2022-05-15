@@ -1,4 +1,4 @@
-package main
+package p4switch
 
 import (
 	"context"
@@ -13,21 +13,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type GrpcSwitch struct {
-	id         uint64
-	configName string
-	ports      int
-	addr       string
-	log        *log.Entry
-	errCh      chan error
-	ctx        context.Context
-	cancel     context.CancelFunc
-	certFile   string
-	p4RtC      *client.Client
-	messageCh  chan *p4_v1.StreamMessageResponse
-}
+const (
+	defaultPort = 50050
+	defaultAddr = "127.0.0.1"
+	defaultWait = 250 * time.Millisecond
+)
 
-func createSwitch(deviceID uint64, configName string, ports int, certFile string) *GrpcSwitch {
+func CreateSwitch(deviceID uint64, configName string, ports int, certFile string) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:         deviceID,
 		configName: configName,
@@ -38,7 +30,7 @@ func createSwitch(deviceID uint64, configName string, ports int, certFile string
 	}
 }
 
-func (sw *GrpcSwitch) runSwitch(ct context.Context) error {
+func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	ctx, cancel := context.WithCancel(ct)
 	sw.ctx = ctx
 	sw.cancel = cancel
@@ -123,7 +115,6 @@ func (sw *GrpcSwitch) handleStreamMessages() {
 			sw.handleDigest(m.Digest)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Trace("Received IdleTimeoutNotification")
-			sw.handleIdleTimeout(m.IdleTimeoutNotification)
 		case *p4_v1.StreamMessageResponse_Error:
 			sw.log.Trace("Received StreamError")
 			sw.errCh <- fmt.Errorf("StreamError: %v", m.Error)

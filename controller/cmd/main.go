@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"controller/pkg/p4switch"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -50,11 +52,11 @@ func main() {
 	log.Infof("Starting %d devices", nDevices)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	switchs := make([]*GrpcSwitch, 0, nDevices)
+	switchs := make([]*p4switch.GrpcSwitch, 0, nDevices)
 	for i := 0; i < nDevices; i++ {
-		sw := createSwitch(uint64(i+1), configName, 3, certFile)
-		if err := sw.runSwitch(ctx); err != nil {
-			sw.log.Errorf("Cannot start")
+		sw := p4switch.CreateSwitch(uint64(i+1), configName, 3, certFile)
+		if err := sw.RunSwitch(ctx); err != nil {
+			sw.GetLogger().Errorf("Cannot start")
 			log.Errorf("%v", err)
 		} else {
 			switchs = append(switchs, sw)
@@ -87,18 +89,18 @@ func main() {
 	time.Sleep(defaultWait)
 }
 
-func changeConfig(ctx context.Context, sw *GrpcSwitch, configName string) {
+func changeConfig(ctx context.Context, sw *p4switch.GrpcSwitch, configName string) {
 	if err := sw.ChangeConfig(configName); err != nil {
 		if status.Convert(err).Code() == codes.Canceled {
-			sw.log.Warn("Failed to update config, restarting")
-			if err := sw.runSwitch(ctx); err != nil {
-				sw.log.Errorf("Cannot start")
-				log.Errorf("%v", err)
+			sw.GetLogger().Warn("Failed to update config, restarting")
+			if err := sw.RunSwitch(ctx); err != nil {
+				sw.GetLogger().Errorf("Cannot start")
+				sw.GetLogger().Errorf("%v", err)
 			}
 		} else {
-			sw.log.Errorf("Error updating swConfig: %v", err)
+			sw.GetLogger().Errorf("Error updating swConfig: %v", err)
 		}
 		return
 	}
-	sw.log.Tracef("Config updated to %s", configName)
+	sw.GetLogger().Tracef("Config updated to %s, ", configName)
 }

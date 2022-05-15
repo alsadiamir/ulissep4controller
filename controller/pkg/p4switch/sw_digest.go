@@ -1,20 +1,33 @@
-package main
+package p4switch
 
 import (
-	"controller/pkg/client"
 	"controller/pkg/util/conversion"
+	"fmt"
 	"net"
-	"strconv"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
-const (
-	ipv4_drop_table = "MyIngress.ipv4_drop"
-	ipv4_drop       = "MyIngress.drop"
-	tableTimeout    = 2 * time.Second
-)
+var digestConfig p4_v1.DigestEntry_Config = p4_v1.DigestEntry_Config{
+	MaxTimeoutNs: 0,
+	MaxListSize:  1,
+	AckTimeoutNs: time.Second.Nanoseconds() * 1000,
+}
+
+func (sw *GrpcSwitch) enableDigest() error {
+	digestName := sw.getDigests()
+	for _, digest := range digestName {
+		if digest == "" {
+			continue
+		}
+		if err := sw.p4RtC.EnableDigest(digest, &digestConfig); err != nil {
+			return fmt.Errorf("cannot enable digest %s", digest)
+		}
+		sw.log.Debugf("Enabled digest %s", digest)
+	}
+	return nil
+}
 
 type digest_t struct {
 	srcAddr  net.IP
@@ -50,38 +63,4 @@ func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 		dstPort:  int(dstPort),
 		pktCount: pktCount,
 	}
-}
-
-func (sw *GrpcSwitch) addIpv4Drop(ip []byte) {
-	entry := sw.p4RtC.NewTableEntry(
-		ipv4_drop_table,
-		[]client.MatchInterface{&client.ExactMatch{
-			Value: ip,
-		}},
-		sw.p4RtC.NewTableActionDirect(ipv4_drop, [][]byte{}),
-		&client.TableEntryOptions{IdleTimeout: tableTimeout},
-	)
-	if err := sw.p4RtC.SafeInsertTableEntry(entry); err != nil {
-		sw.errCh <- err
-		return
-	}
-	sw.log.Warnf("Added ipv4_drop entry: %d", ip)
-}
-
-func (sw *GrpcSwitch) handleIdleTimeout(notification *p4_v1.IdleTimeoutNotification) {
-	for _, entry := range notification.TableEntry {
-		// handle drop table id
-		if entry.TableId != sw.p4RtC.TableId(ipv4_drop_table) {
-			return
-		}
-		if err := sw.p4RtC.DeleteTableEntry(entry); err != nil {
-			sw.errCh <- err
-			return
-		}
-		sw.log.Infof("Remvd ipv4_drop entry: %d", entry.Match[0].GetExact().Value)
-	}
-}
-
-func (sw *GrpcSwitch) GetName() string {
-	return "s" + strconv.FormatUint(sw.id, 10)
 }

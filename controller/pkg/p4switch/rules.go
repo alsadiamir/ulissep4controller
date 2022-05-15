@@ -1,4 +1,4 @@
-package main
+package p4switch
 
 import (
 	"controller/pkg/client"
@@ -47,7 +47,7 @@ func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) 
 	return &config, nil
 }
 
-func (sw *GrpcSwitch) GetProgram() string {
+func (sw *GrpcSwitch) getProgramName() string {
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting program name: {err}", err)
@@ -56,7 +56,7 @@ func (sw *GrpcSwitch) GetProgram() string {
 	return config.Program
 }
 
-func (sw *GrpcSwitch) GetDigests() []string {
+func (sw *GrpcSwitch) getDigests() []string {
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting digest list: {err}", err)
@@ -65,7 +65,7 @@ func (sw *GrpcSwitch) GetDigests() []string {
 	return config.Digest
 }
 
-func (sw *GrpcSwitch) getAllTableEntries() []*p4_v1.TableEntry {
+func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
 	var tableEntries []*p4_v1.TableEntry
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {

@@ -6,7 +6,7 @@ singlesw-alt = ../config/singlesw-config-alt.yml
 
 all: debug
 singlesw:
-	go run . -n 1 -config $(singlesw-config) -config-alt $(singlesw-alt) -trace
+	go run cmd/main.go -n 1 -config $(singlesw-config) -config-alt $(singlesw-alt) -trace
 debug:
 	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -verbose
 trace:
