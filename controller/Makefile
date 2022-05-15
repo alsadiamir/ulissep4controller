@@ -1,5 +1,5 @@
-p4config = ../config/config.json
-p4config-alt = ../config/config-alt.json
+p4config = ../config/config.yml
+p4config-alt = ../config/config-alt.yml
 singlesw-config = ../config/singlesw-config.yml
 singlesw-alt = ../config/singlesw-config-alt.yml
 
