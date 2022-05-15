@@ -1,10 +1,8 @@
 package main
 
 import (
-	"controller/pkg/client"
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
@@ -17,10 +15,10 @@ const (
 	p4Path    = "../p4/"
 )
 
-func (sw *GrpcSwitch) addRoutes() {
-	for _, route := range sw.GetRules() {
-		sw.addIpv4Lpm(route.toBytes())
-	}
+var digestConfig p4_v1.DigestEntry_Config = p4_v1.DigestEntry_Config{
+	MaxTimeoutNs: 0,
+	MaxListSize:  1,
+	AckTimeoutNs: time.Second.Nanoseconds() * 1000,
 }
 
 func readFileBytes(filePath string) []byte {
@@ -34,22 +32,20 @@ func readFileBytes(filePath string) []byte {
 	return bytes
 }
 
-func (sw *GrpcSwitch) addIpv4Lpm(route RuleBytes) {
-	entry := sw.p4RtC.NewTableEntry(
-		route.table,
-		[]client.MatchInterface{&client.LpmMatch{
-			Value: route.ip,
-			PLen:  32,
-		}},
-		sw.p4RtC.NewTableActionDirect(route.action, [][]byte{route.mac, route.port}),
-		nil,
-	)
+func (sw *GrpcSwitch) addTableEntry(entry *p4_v1.TableEntry) {
 	if err := sw.p4RtC.InsertTableEntry(entry); err != nil {
-		sw.log.Errorf("Error adding %s entry: %d -> p%d", strings.Split(route.table, ".")[1], route.ip, route.port)
+		sw.log.Errorf("Error adding entry: %+v\n%v", entry, err)
 		sw.errCh <- err
 		return
 	}
-	sw.log.Debugf("Added %s entry: %d -> p%d", strings.Split(route.table, ".")[1], route.ip, route.port)
+	sw.log.Tracef("Added entry: %+v", entry)
+}
+
+func (sw *GrpcSwitch) addRoutes() {
+	entries := sw.getAllTableEntries()
+	for _, entry := range entries {
+		sw.addTableEntry(entry)
+	}
 }
 
 func (sw *GrpcSwitch) ChangeConfig(configName string) error {
@@ -89,19 +85,15 @@ func (sw *GrpcSwitch) readBin() []byte {
 }
 
 func (sw *GrpcSwitch) enableDigest() error {
-	digestName := sw.GetDigest()
-	if digestName == "" {
-		sw.log.Debug("Digest not enabled")
-		return nil
+	digestName := sw.GetDigests()
+	for _, digest := range digestName {
+		if digest == "" {
+			continue
+		}
+		if err := sw.p4RtC.EnableDigest(digest, &digestConfig); err != nil {
+			return fmt.Errorf("cannot enable digest %s", digest)
+		}
+		sw.log.Debugf("Enabled digest %s", digest)
 	}
-	digestConfig := &p4_v1.DigestEntry_Config{
-		MaxTimeoutNs: 0,
-		MaxListSize:  1,
-		AckTimeoutNs: time.Second.Nanoseconds() * 1000,
-	}
-	if err := sw.p4RtC.EnableDigest(digestName, digestConfig); err != nil {
-		return fmt.Errorf("cannot enable digest %s", digestName)
-	}
-	sw.log.Debugf("Enabled digest %s", digestName)
 	return nil
 }

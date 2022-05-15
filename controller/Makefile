@@ -1,7 +1,7 @@
 p4config = ../config/config.json
 p4config-alt = ../config/config-alt.json
-singlesw-config = ../config/singlesw-config.json
-singlesw-alt = ../config/singlesw-config-alt.json
+singlesw-config = ../config/singlesw-config.yml
+singlesw-alt = ../config/singlesw-config-alt.yml
 
 
 all: debug
