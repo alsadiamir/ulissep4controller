@@ -8,32 +8,26 @@ import (
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
 	ipv4_drop_table = "MyIngress.ipv4_drop"
 	ipv4_drop       = "MyIngress.drop"
-	tableTimeout    = 10 * time.Second
+	tableTimeout    = 2 * time.Second
 )
 
 type digest_t struct {
-	srcAddr net.IP
-	dstAddr net.IP
-	srcPort int
-	dstPort int
+	srcAddr  net.IP
+	dstAddr  net.IP
+	srcPort  int
+	dstPort  int
+	pktCount uint64
 }
 
 func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 	for _, digestData := range digestList.Data {
-		digestData := parseDigestData(digestData.GetStruct())
-		sw.log.WithFields(log.Fields{
-			"srcAddr": digestData.srcAddr,
-			"srcPort": digestData.srcPort,
-			"dstAddr": digestData.dstAddr,
-			"dstPort": digestData.dstPort,
-		}).Trace()
-		sw.addIpv4Drop(digestData.srcAddr.To4())
+		digestStruct := parseDigestData(digestData.GetStruct())
+		sw.log.Debugf("%s P%d -> %s P%d pkt %d", digestStruct.srcAddr, digestStruct.srcPort, digestStruct.dstAddr, digestStruct.dstPort, digestStruct.pktCount)
 	}
 	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
 		sw.errCh <- err
@@ -48,11 +42,13 @@ func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 	dstAddr := conversion.BinaryToIpv4(dstAddrByte)
 	srcPort := conversion.BinaryCompressedToUint16(str.Members[2].GetBitstring())
 	dstPort := conversion.BinaryCompressedToUint16(str.Members[3].GetBitstring())
+	pktCount := conversion.BinaryCompressedToUint64(str.Members[4].GetBitstring())
 	return digest_t{
-		srcAddr: srcAddr,
-		dstAddr: dstAddr,
-		srcPort: int(srcPort),
-		dstPort: int(dstPort),
+		srcAddr:  srcAddr,
+		dstAddr:  dstAddr,
+		srcPort:  int(srcPort),
+		dstPort:  int(dstPort),
+		pktCount: pktCount,
 	}
 }
 

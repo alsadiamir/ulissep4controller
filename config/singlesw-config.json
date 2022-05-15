@@ -14,7 +14,7 @@
         "table": "MyIngress.ipv4_lpm"
       }
     ],
-    "program": "simple",
-    "digest": ""
+    "program": "asymmetric",
+    "digest": "digest_t"
   }
 }

@@ -3,13 +3,9 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
-typedef bit<10> PortId_t;
-const PortId_t NUM_PORTS = 512;
-#define PACKET_COUNT_WIDTH 32
-#define TRESHOLD 200
-#define MAX_TRESHOLD 1000
+#define TRESHOLD 50000
 //microseconds
-#define WINDOW_SIZE 15000000
+#define WINDOW_SIZE 1500000
 
 #define HASH_BASE 10w0
 #define HASH_MAX 10w1023
@@ -58,8 +54,8 @@ struct digest_t {
     ip4Addr_t dstAddr;
     bit<9>    srcPort;
     bit<9>    dstPort;
+    bit<48>   pkt_count;
 }
-
 /*************************************************************************
 *********************** P A R S E R  ***********************************
 *************************************************************************/
@@ -113,19 +109,6 @@ control MyIngress(inout headers hdr,
         exit;
     }
 
-    action update_pkt_count(bit<32> flow_id) {
-      bit<48> last_pkt_cnt;
-      /* Get the time the previous packet was seen */
-      pkt_count.read(last_pkt_cnt, flow_id);
-      /* Update the register with the new timestamp */
-      pkt_count.write((bit<32>)flow_id, last_pkt_cnt + 1);
-    }
-
-    action reset_pkt_count(bit<32> flow, bit<32> flow_opp) {
-      pkt_count.write((bit<32>)flow,0);
-      pkt_count.write((bit<32>)flow_opp,0);
-    }
-
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
@@ -133,10 +116,8 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action send_digest() {
-        //digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec});
-        // inverted idk why
-        digest<digest_t>(0, {hdr.ipv4.dstAddr, hdr.ipv4.srcAddr, standard_metadata.egress_spec ,standard_metadata.ingress_port});
+    action send_digest(bit<48> flow_pkt_count) {
+        digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow_pkt_count});
     }
 
     table ipv4_lpm {
@@ -176,37 +157,34 @@ control MyIngress(inout headers hdr,
             bit<48> last_pkt_cnt;
             bit<48> last_pkt_cnt_opp;
 	        bit<48> last_time;
-	        bit<48> intertime;
+	        bit<48> diff_time;
             bit<48> diff_pkt_cnt;
 
             // compute flow index
             hash(flow,     HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
             hash(flow_opp, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
 
-            // read flow values
-            last_seen.read(last_time,flow);
-            last_seen.write(flow,standard_metadata.ingress_global_timestamp);
-
-            // first time initialize
-            if (last_time == (bit<48>)0) {
-                last_seen.write(flow,standard_metadata.ingress_global_timestamp);
-                last_time = standard_metadata.ingress_global_timestamp;
-            }
-
-            // check window
-            intertime = standard_metadata.ingress_global_timestamp - last_time;
-            if (intertime > WINDOW_SIZE) {
-                reset_pkt_count(flow,flow_opp);
-                return;
-            }
             pkt_count.read(last_pkt_cnt,     flow);
             pkt_count.read(last_pkt_cnt_opp, flow_opp);
-            diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
-
-            if (diff_pkt_cnt < (bit<48>)TRESHOLD) {
-                update_pkt_count(flow);
+            pkt_count.write(flow, last_pkt_cnt + 1);
+            if (last_pkt_cnt > last_pkt_cnt_opp) {
+                diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
             } else {
-                send_digest();
+                diff_pkt_cnt = last_pkt_cnt_opp - last_pkt_cnt + 1;
+            }
+
+            if (diff_pkt_cnt > (bit<48>)TRESHOLD) {
+                send_digest((bit<48>)TRESHOLD);
+            }
+
+            // read flow values
+            last_seen.read(last_time,flow);
+            // check window
+            diff_time = standard_metadata.ingress_global_timestamp - last_time;
+            if (diff_time > (bit<48>)WINDOW_SIZE) {
+                pkt_count.write(flow,(bit<48>)0);
+                pkt_count.write(flow_opp,(bit<48>)0);
+                last_seen.write(flow,standard_metadata.ingress_global_timestamp);
             }
         }
     }
