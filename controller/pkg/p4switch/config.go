@@ -19,7 +19,7 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
-	sw.addRoutes()
+	sw.addRules()
 	sw.enableDigest()
 	time.Sleep(defaultWait)
 	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
@@ -33,7 +33,7 @@ func (sw *GrpcSwitch) ChangeConfigSync(configName string) error {
 	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
-	sw.addRoutes()
+	sw.addRules()
 	sw.enableDigest()
 	return nil
 }
@@ -47,7 +47,7 @@ func (sw *GrpcSwitch) addTableEntry(entry *p4_v1.TableEntry) {
 	sw.log.Tracef("Added entry: %+v", entry)
 }
 
-func (sw *GrpcSwitch) addRoutes() {
+func (sw *GrpcSwitch) addRules() {
 	entries := getAllTableEntries(sw)
 	for _, entry := range entries {
 		sw.addTableEntry(entry)

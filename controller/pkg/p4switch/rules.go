@@ -42,7 +42,7 @@ func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) 
 	}
 	config := configs[swName]
 	if config.Program == "" {
-		return nil, fmt.Errorf("Switch config not found in file {fileName}")
+		return nil, fmt.Errorf("switch config not found in file %s", configFileName)
 	}
 	return &config, nil
 }
@@ -60,7 +60,7 @@ func (sw *GrpcSwitch) getDigests() []string {
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting digest list: %v", err)
-		return make([]string, 0, 0)
+		return make([]string, 0)
 	}
 	return config.Digest
 }
@@ -89,9 +89,10 @@ func createTableEntry(sw *GrpcSwitch, rule Rule) *p4_v1.TableEntry {
 
 func parseActionParams(actionParams []string) [][]byte {
 	actionByte := make([][]byte, len(actionParams))
+	r, _ := regexp.Compile(macRegexp)
 	for i, action := range actionParams {
 		// check if it is a mac address
-		if res, _ := regexp.MatchString(macRegexp, action); res == true {
+		if r.MatchString(action) {
 			actionByte[i], _ = conversion.MacToBinary(action)
 		} else {
 			num, _ := strconv.ParseInt(action, 10, 64)

@@ -81,7 +81,7 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	go sw.handleStreamMessages()
 	go sw.startRunner()
 	//
-	sw.addRoutes()
+	sw.addRules()
 	sw.enableDigest()
 	//
 	sw.log.Info("Switch started")
