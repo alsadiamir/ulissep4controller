@@ -19,7 +19,7 @@ const macRegexp = "([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})"
 
 type Rule struct {
 	Table       string
-	Match       string
+	Key         string
 	Type        string
 	Action      string
 	ActionParam []string `yaml:"action_param"`
@@ -81,7 +81,7 @@ func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
 func createTableEntry(sw *GrpcSwitch, rule Rule) *p4_v1.TableEntry {
 	return sw.p4RtC.NewTableEntry(
 		rule.Table,
-		parseMatchInterface(rule.Type, rule.Match),
+		parseMatchInterface(rule.Type, rule.Key),
 		sw.p4RtC.NewTableActionDirect(rule.Action, parseActionParams(rule.ActionParam)),
 		nil,
 	)
@@ -102,11 +102,11 @@ func parseActionParams(actionParams []string) [][]byte {
 	return actionByte
 }
 
-func parseMatchInterface(matchType string, matchValue string) []client.MatchInterface {
+func parseMatchInterface(matchType string, key string) []client.MatchInterface {
 	//var matchInterface p4_v1.FieldMatch
 	switch matchType {
 	case "exact":
-		ip, err := conversion.IpToBinary(matchValue)
+		ip, err := conversion.IpToBinary(key)
 		if err != nil {
 			log.Errorf("Error parsing ip %s", ip)
 		}
@@ -114,9 +114,9 @@ func parseMatchInterface(matchType string, matchValue string) []client.MatchInte
 			Value: ip,
 		}}
 	default:
-		values := strings.Split(matchValue, "/")
+		values := strings.Split(key, "/")
 		if len(values) != 2 {
-			log.Errorf("Error parsing match %s -> %s", matchType, matchValue)
+			log.Errorf("Error parsing match %s -> %s", matchType, key)
 			return nil
 		}
 		ip, err := conversion.IpToBinary(values[0])
