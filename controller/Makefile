@@ -1,5 +1,5 @@
-p4config = ../config/config.json
-p4config-alt = ../config/config-alt.json
+p4config = ../config/config.yml
+p4config-alt = ../config/config-alt.yml
 singlesw-config = ../config/singlesw-config.yml
 singlesw-alt = ../config/singlesw-config-alt.yml
 
@@ -8,11 +8,11 @@ all: debug
 singlesw:
 	go run cmd/main.go -n 1 -config $(singlesw-config) -config-alt $(singlesw-alt) -trace
 debug:
-	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -verbose
+	go run cmd/main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -verbose
 trace:
-	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -trace
+	go run cmd/main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -trace
 prod:
-	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt)
+	go run cmd/main.go -n 4 -config $(p4config) -config-alt $(p4config-alt)
 tls:
-	go run . -n 4 -config $(p4config) -config-alt $(p4config-alt) -cert-file /tmp/cert.pem -verbose
+	go run cmd/main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -cert-file /tmp/cert.pem -verbose
 
