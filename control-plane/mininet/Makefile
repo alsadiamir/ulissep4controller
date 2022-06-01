@@ -1,4 +1,4 @@
-p4program = p4_packet_management
+p4program = asymmetric
 
 mininet: stop
 	rm -rf log/*

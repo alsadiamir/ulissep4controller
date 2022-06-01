@@ -7,7 +7,7 @@ import (
 	"time"
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
-	log "github.com/sirupsen/logrus"
+	//log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	ipv4_drop       = "MyIngress.drop"
 	tableTimeout    = 10 * time.Second
 )
-
+/*
 type digest_t struct {
 	ingress_timestamp uint64
 	packet_length int
@@ -32,7 +32,15 @@ type digest_t struct {
 	dst_ip net.IP
 	ip_upper_protocol int
 }
-
+*/
+type digest_t struct {
+	srcAddr net.IP
+	dstAddr net.IP
+	srcPort int
+	dstPort int
+	flow uint32
+}
+/*
 func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 	for _, digestData := range digestList.Data {
 		digestData := parseDigestData(digestData.GetStruct())
@@ -96,6 +104,41 @@ func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 		ip_upper_protocol: int(ip_upper_protocol),
 	}
 }
+*/
+
+
+func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
+        for _, digestData := range digestList.Data {
+                digestStruct := parseDigestData(digestData.GetStruct())
+                sw.log.Debugf("NEW SUSPECT FLOW ( hash:%d ): %s P%d -> %s P%d", digestStruct.flow, digestStruct.srcAddr, digestStruct.srcPort, digestStruct.dstAddr, digestStruct.dstPort)
+                //sw.log.Debugf("NEW FLOW: %s -> %s", digestStruct.srcAddr, digestStruct.dstAddr)
+        }
+        if err := sw.p4RtC.AckDigestList(digestList); err != nil {
+                sw.errCh <- err
+        }
+        //sw.log.Trace("Ack digest list")
+}
+
+func parseDigestData(str *p4_v1.P4StructLike) digest_t {
+        srcAddrByte := str.Members[0].GetBitstring()
+        dstAddrByte := str.Members[1].GetBitstring()
+        srcAddr := conversion.BinaryToIpv4(srcAddrByte)
+        dstAddr := conversion.BinaryToIpv4(dstAddrByte)
+        srcPort := conversion.BinaryCompressedToUint16(str.Members[2].GetBitstring())
+        dstPort := conversion.BinaryCompressedToUint16(str.Members[3].GetBitstring())
+        flow := conversion.BinaryCompressedToUint32(str.Members[4].GetBitstring())
+        return digest_t{
+                srcAddr:  srcAddr,
+                dstAddr:  dstAddr,
+                srcPort:  int(srcPort),
+                dstPort:  int(dstPort),
+                flow: flow,
+        }
+}
+
+
+
+
 
 func (sw *GrpcSwitch) addIpv4Drop(ip []byte) {
 	entry := sw.p4RtC.NewTableEntry(

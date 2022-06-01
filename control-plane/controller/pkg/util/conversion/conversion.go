@@ -90,4 +90,11 @@ func BinaryCompressedToUint16(bytes []byte) uint16 {
 	var zero byte = 0
 	return binary.BigEndian.Uint16([]byte{zero, bytes[0]})
 }
-
+func BinaryCompressedToUint32(bytes []byte) uint32 {
+        buff := make([]byte, 4)
+        offset := 4 - len(bytes)
+        for idx, b := range bytes {
+                buff[offset+idx] = b
+        }
+        return binary.BigEndian.Uint32(buff)
+}
