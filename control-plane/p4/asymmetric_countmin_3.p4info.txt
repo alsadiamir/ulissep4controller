@@ -1,0 +1,207 @@
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 37375156
+    name: "MyIngress.ipv4_lpm"
+    alias: "ipv4_lpm"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 28792405
+  }
+  action_refs {
+    id: 21257015
+  }
+  size: 1024
+  idle_timeout_behavior: NOTIFY_CONTROL
+}
+actions {
+  preamble {
+    id: 21257015
+    name: "NoAction"
+    alias: "NoAction"
+    annotations: "@noWarn(\"unused\")"
+  }
+}
+actions {
+  preamble {
+    id: 28792405
+    name: "MyIngress.ipv4_forward"
+    alias: "ipv4_forward"
+  }
+  params {
+    id: 1
+    name: "dstAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "port"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 23592486
+    name: "MyIngress.send_digest"
+    alias: "send_digest"
+  }
+}
+actions {
+  preamble {
+    id: 27629954
+    name: "MyIngress.find_min"
+    alias: "find_min"
+  }
+}
+registers {
+  preamble {
+    id: 374119866
+    name: "MyIngress.pkt_count_0"
+    alias: "pkt_count_0"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1024
+}
+registers {
+  preamble {
+    id: 381512859
+    name: "MyIngress.pkt_count_1"
+    alias: "pkt_count_1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1024
+}
+registers {
+  preamble {
+    id: 377669670
+    name: "MyIngress.pkt_count_2"
+    alias: "pkt_count_2"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1024
+}
+registers {
+  preamble {
+    id: 380531453
+    name: "MyIngress.flow_count_treshold"
+    alias: "flow_count_treshold"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1024
+}
+registers {
+  preamble {
+    id: 377784649
+    name: "MyIngress.last_seen"
+    alias: "last_seen"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1024
+}
+digests {
+  preamble {
+    id: 389049336
+    name: "digest_t"
+    alias: "digest_t"
+  }
+  type_spec {
+    struct {
+      name: "digest_t"
+    }
+  }
+}
+type_info {
+  structs {
+    key: "digest_t"
+    value {
+      members {
+        name: "srcAddr"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "dstAddr"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "srcPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 9
+            }
+          }
+        }
+      }
+      members {
+        name: "dstPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 9
+            }
+          }
+        }
+      }
+      members {
+        name: "flow"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+    }
+  }
+}
