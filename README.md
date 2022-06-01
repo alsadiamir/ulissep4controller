@@ -35,7 +35,7 @@ make ctrl
 
 3. Start sending packets (from mininet)
 ```bash
-mininet> h1 iperf3 -c h2
+mininet> h1 iperf3 -c h2 -u -R -t 720
 ```
 
 ### Useful links

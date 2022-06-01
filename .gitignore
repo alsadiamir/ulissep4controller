@@ -4,6 +4,8 @@ log
 __pycache__
 *.swp
 *.pem
+*.txt
+*.pcap
 
 p4/*
 !p4/*.p4

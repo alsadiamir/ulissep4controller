@@ -34,13 +34,13 @@ type digest_t struct {
 	dstAddr  net.IP
 	srcPort  int
 	dstPort  int
-	pktCount uint64
+	flow uint32
 }
 
 func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 	for _, digestData := range digestList.Data {
 		digestStruct := parseDigestData(digestData.GetStruct())
-		sw.log.Debugf("%s P%d -> %s P%d pkt %d", digestStruct.srcAddr, digestStruct.srcPort, digestStruct.dstAddr, digestStruct.dstPort, digestStruct.pktCount)
+		sw.log.Debugf("FLOW SUSPECT(hash:%d) %s -> %s", digestStruct.flow, digestStruct.srcAddr, digestStruct.dstAddr)
 	}
 	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
 		sw.errCh <- err
@@ -55,12 +55,12 @@ func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 	dstAddr := conversion.BinaryToIpv4(dstAddrByte)
 	srcPort := conversion.BinaryCompressedToUint16(str.Members[2].GetBitstring())
 	dstPort := conversion.BinaryCompressedToUint16(str.Members[3].GetBitstring())
-	pktCount := conversion.BinaryCompressedToUint64(str.Members[4].GetBitstring())
+	flow := conversion.BinaryCompressedToUint32(str.Members[4].GetBitstring())
 	return digest_t{
 		srcAddr:  srcAddr,
 		dstAddr:  dstAddr,
 		srcPort:  int(srcPort),
 		dstPort:  int(dstPort),
-		pktCount: pktCount,
+		flow: flow,
 	}
 }

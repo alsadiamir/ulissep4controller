@@ -42,6 +42,8 @@ header ipv4_t {
 }
 
 struct metadata {
+    bit<48> min_flow;
+    bit<48> min_flow_opp;
 }
 
 struct headers {
@@ -101,10 +103,10 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register<bit<48>>(1024) pkt_count;
+    register<bit<48>>(1024) pkt_count_0;
+    register<bit<48>>(1024) pkt_count_1;
     register<bit<48>>(1024) flow_count_treshold;
     register<bit<48>>(1024) last_seen;
-    register<bit<48>>(1) number_of_flows;
 
 
     action drop() {
@@ -121,7 +123,23 @@ control MyIngress(inout headers hdr,
 
     action send_digest(bit<32> flow) {
         digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow});
-        //digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr});
+    }
+
+    action find_min(bit<48> pkt_cnt0, bit<48> pkt_cnt1, bit<48> pkt_cnt_opp0, bit<48> pkt_cnt_opp1){
+
+        //MIN of FLOW
+        if(pkt_cnt0 > pkt_cnt1){
+            meta.min_flow = pkt_cnt1;
+        } else{
+            meta.min_flow = pkt_cnt0;
+        }
+
+        //MIN of FLOW OPP
+        if(pkt_cnt_opp0 > pkt_cnt_opp1){
+            meta.min_flow_opp = pkt_cnt_opp1;
+        } else{
+            meta.min_flow_opp = pkt_cnt_opp0;
+        }  
     }
 
     table ipv4_lpm {
@@ -138,74 +156,86 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-/*
-    table ipv4_drop {
-        key = {
-            hdr.ipv4.srcAddr: exact;
-        }
-        actions = {
-            NoAction;
-            drop;
-        }
-        size = 1024;
-        support_timeout = true;
-        default_action = NoAction();
-    }
-*/
-
     apply {
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
-            //ipv4_drop.apply();
 
-            bit<32> flow;
-            bit<32> flow_opp;
             bit<48> flow_hit;
-            bit<48> number_of_tracked_flows;
-            bit<48> last_pkt_cnt;
-            bit<48> last_pkt_cnt_opp;
+            bit<32> flow0;
+            bit<32> flow_opp0;
+            bit<48> last_pkt_cnt0;
+            bit<48> last_pkt_cnt_opp0;
+
+            bit<32> flow1;
+            bit<32> flow_opp1;
+            bit<48> last_pkt_cnt1;
+            bit<48> last_pkt_cnt_opp1;
+
             bit<48> last_time;
             bit<48> diff_time;
             bit<48> diff_pkt_cnt;
 
-            // compute flow index
-            hash(flow,     HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
-            hash(flow_opp, HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
-/*
-            //count flows   
-            tracked_flow_map.read(flow_hit,     flow);
-	        if(flow_hit == (bit<48>)0) {
-                tracked_flow_map.write(flow, (bit<48>)1);
-                number_of_flows.read(number_of_tracked_flows,     0);
-                number_of_flows.write(0,     number_of_tracked_flows + 1);
-            }
-*/            
+            // compute flow index 0
+            hash(flow0,     HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
+            hash(flow_opp0, HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
 
-            pkt_count.read(last_pkt_cnt,     flow);
-            pkt_count.read(last_pkt_cnt_opp, flow_opp);
-            pkt_count.write(flow, last_pkt_cnt + 1);
-            if (last_pkt_cnt > last_pkt_cnt_opp) {
-                diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
+            // compute flow index 1
+            hash(flow1,     HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
+            hash(flow_opp1, HashAlgorithm.crc16, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
+
+            //read packet count index 0
+            pkt_count_0.read(last_pkt_cnt0,     flow0);
+            pkt_count_0.read(last_pkt_cnt_opp0, flow_opp0);
+
+            //read packet count index 1
+            pkt_count_1.read(last_pkt_cnt1,     flow1);
+            pkt_count_1.read(last_pkt_cnt_opp1, flow_opp1);
+
+            //updating the packet count index 0
+            last_pkt_cnt0 = last_pkt_cnt0 + 1;
+            pkt_count_0.write(flow0, last_pkt_cnt0);
+
+            //updating the packet count index 1
+            last_pkt_cnt1 = last_pkt_cnt1 + 1;
+            pkt_count_1.write(flow1, last_pkt_cnt1);
+
+            //finding the minimum of FLOW and FLOW OPP - using last_pkt_cnt0 and last_pkt_cnt_opp0 to keep the minimum
+            find_min(last_pkt_cnt0,last_pkt_cnt1,last_pkt_cnt_opp0,last_pkt_cnt_opp1);
+            last_pkt_cnt0 = meta.min_flow;
+            last_pkt_cnt_opp0 = meta.min_flow_opp;
+
+            //calculating the difference
+            if (last_pkt_cnt0 > last_pkt_cnt_opp0) {
+                diff_pkt_cnt = last_pkt_cnt0 - last_pkt_cnt_opp0 + 1;
             } else {
-                diff_pkt_cnt = last_pkt_cnt_opp - last_pkt_cnt + 1;
+                diff_pkt_cnt = last_pkt_cnt_opp0 - last_pkt_cnt0 + 1;
             }
 
+            //sending the digest if flow is hit
             if (diff_pkt_cnt > (bit<48>)TRESHOLD) {
-                flow_count_treshold.read(flow_hit,     flow);
+                flow_count_treshold.read(flow_hit,     flow0);
                 if(flow_hit == (bit<48>)0) {
-                    flow_count_treshold.write(flow, (bit<48>)1);
-                    send_digest((bit<32>)flow);
+                    flow_count_treshold.write(flow0, (bit<48>)1);
+                    send_digest((bit<32>)flow0);
                 }
             }
 
-            // read flow values
-            last_seen.read(last_time,flow);
+            // read the previous timestamp when the flow was hit
+            last_seen.read(last_time,flow0);
             // check window
             diff_time = standard_metadata.ingress_global_timestamp - last_time;
+
+            //checking if the window is expired
             if (diff_time > (bit<48>)WINDOW_SIZE) {
-                pkt_count.write(flow,(bit<48>)0);
-                pkt_count.write(flow_opp,(bit<48>)0);
-                last_seen.write(flow,standard_metadata.ingress_global_timestamp);
+                
+                //resetting the flow counters
+                pkt_count_0.write(flow0,(bit<48>)0);
+                pkt_count_0.write(flow_opp0,(bit<48>)0);
+                pkt_count_1.write(flow1,(bit<48>)0);
+                pkt_count_1.write(flow_opp1,(bit<48>)0);
+                
+                //only updating the first flow
+                last_seen.write(flow0,standard_metadata.ingress_global_timestamp);
             }
         }
     }

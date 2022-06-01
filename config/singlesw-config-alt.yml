@@ -1,7 +1,8 @@
 ---
 s1:
-  program: simple
+  program: asymmetric_countmin
   digest:
+       - digest_t
   rules:
     - table: MyIngress.ipv4_lpm
       key: 10.0.1.1/24 #h1
