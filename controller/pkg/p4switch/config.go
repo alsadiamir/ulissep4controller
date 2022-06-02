@@ -48,7 +48,7 @@ func (sw *GrpcSwitch) addTableEntry(entry *p4_v1.TableEntry) {
 }
 
 func (sw *GrpcSwitch) addRules() {
-	entries := getAllTableEntries(sw)
+	entries := GetAllTableEntries(sw)
 	for _, entry := range entries {
 		sw.addTableEntry(entry)
 	}
@@ -66,13 +66,13 @@ func readFileBytes(filePath string) []byte {
 }
 
 func (sw *GrpcSwitch) readP4Info() []byte {
-	p4Info := p4Path + sw.getProgramName() + p4InfoExt
+	p4Info := p4Path + sw.GetProgramName() + p4InfoExt
 	sw.log.Tracef("p4Info %s", p4Info)
 	return readFileBytes(p4Info)
 }
 
 func (sw *GrpcSwitch) readBin() []byte {
-	p4Bin := p4Path + sw.getProgramName() + p4BinExt
+	p4Bin := p4Path + sw.GetProgramName() + p4BinExt
 	sw.log.Tracef("p4Bin %s", p4Bin)
 	return readFileBytes(p4Bin)
 }

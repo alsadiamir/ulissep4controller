@@ -31,6 +31,37 @@ type SwitchConfig struct {
 	Digest  []string
 }
 
+func (sw *GrpcSwitch) GetProgramName() string {
+	config, err := parseSwConfig(sw.GetName(), sw.configName)
+	if err != nil {
+		sw.log.Errorf("Error getting program name: %v", err)
+		return ""
+	}
+	return config.Program
+}
+
+func (sw *GrpcSwitch) GetDigests() []string {
+	config, err := parseSwConfig(sw.GetName(), sw.configName)
+	if err != nil {
+		sw.log.Errorf("Error getting digest list: %v", err)
+		return make([]string, 0)
+	}
+	return config.Digest
+}
+
+func GetAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
+	var tableEntries []*p4_v1.TableEntry
+	config, err := parseSwConfig(sw.GetName(), sw.configName)
+	if err != nil {
+		sw.log.Errorf("Error getting table entries: %v", err)
+		return tableEntries
+	}
+	for _, rule := range config.Rules {
+		tableEntries = append(tableEntries, createTableEntry(sw, rule))
+	}
+	return tableEntries
+}
+
 func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) {
 	configs := make(map[string]SwitchConfig)
 	configFile, err := ioutil.ReadFile(configFileName)
@@ -45,37 +76,6 @@ func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) 
 		return nil, fmt.Errorf("switch config not found in file %s", configFileName)
 	}
 	return &config, nil
-}
-
-func (sw *GrpcSwitch) getProgramName() string {
-	config, err := parseSwConfig(sw.GetName(), sw.configName)
-	if err != nil {
-		sw.log.Errorf("Error getting program name: %v", err)
-		return ""
-	}
-	return config.Program
-}
-
-func (sw *GrpcSwitch) getDigests() []string {
-	config, err := parseSwConfig(sw.GetName(), sw.configName)
-	if err != nil {
-		sw.log.Errorf("Error getting digest list: %v", err)
-		return make([]string, 0)
-	}
-	return config.Digest
-}
-
-func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
-	var tableEntries []*p4_v1.TableEntry
-	config, err := parseSwConfig(sw.GetName(), sw.configName)
-	if err != nil {
-		sw.log.Errorf("Error getting table entries: %v", err)
-		return tableEntries
-	}
-	for _, rule := range config.Rules {
-		tableEntries = append(tableEntries, createTableEntry(sw, rule))
-	}
-	return tableEntries
 }
 
 func createTableEntry(sw *GrpcSwitch, rule Rule) *p4_v1.TableEntry {

@@ -16,7 +16,7 @@ var digestConfig p4_v1.DigestEntry_Config = p4_v1.DigestEntry_Config{
 }
 
 func (sw *GrpcSwitch) enableDigest() error {
-	digestName := sw.getDigests()
+	digestName := sw.GetDigests()
 	for _, digest := range digestName {
 		if digest == "" {
 			continue
