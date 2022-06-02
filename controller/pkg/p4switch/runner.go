@@ -82,7 +82,7 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	go sw.startRunner()
 	//
 	sw.addRules()
-	sw.enableDigest()
+	sw.EnableDigest()
 	//
 	sw.log.Info("Switch started")
 	return nil
@@ -112,7 +112,7 @@ func (sw *GrpcSwitch) handleStreamMessages() {
 			sw.log.Debug("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
 			sw.log.Trace("Received DigestList")
-			sw.handleDigest(m.Digest)
+			sw.HandleDigest(m.Digest)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Trace("Received IdleTimeoutNotification")
 		case *p4_v1.StreamMessageResponse_Error:

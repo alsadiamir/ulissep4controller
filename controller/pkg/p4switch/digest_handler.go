@@ -15,7 +15,7 @@ var digestConfig p4_v1.DigestEntry_Config = p4_v1.DigestEntry_Config{
 	AckTimeoutNs: time.Second.Nanoseconds() * 1000,
 }
 
-func (sw *GrpcSwitch) enableDigest() error {
+func (sw *GrpcSwitch) EnableDigest() error {
 	digestName := sw.GetDigests()
 	for _, digest := range digestName {
 		if digest == "" {
@@ -29,6 +29,8 @@ func (sw *GrpcSwitch) enableDigest() error {
 	return nil
 }
 
+/* --- CHANGE FROM NOW ON --- */
+
 type digest_t struct {
 	srcAddr  net.IP
 	dstAddr  net.IP
@@ -37,7 +39,7 @@ type digest_t struct {
 	pktCount uint64
 }
 
-func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
+func (sw *GrpcSwitch) HandleDigest(digestList *p4_v1.DigestList) {
 	for _, digestData := range digestList.Data {
 		digestStruct := parseDigestData(digestData.GetStruct())
 		sw.log.Debugf("%s P%d -> %s P%d pkt %d", digestStruct.srcAddr, digestStruct.srcPort, digestStruct.dstAddr, digestStruct.dstPort, digestStruct.pktCount)

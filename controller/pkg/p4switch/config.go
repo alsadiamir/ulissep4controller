@@ -20,7 +20,7 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 		return err
 	}
 	sw.addRules()
-	sw.enableDigest()
+	sw.EnableDigest()
 	time.Sleep(defaultWait)
 	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
 		return err
@@ -34,7 +34,7 @@ func (sw *GrpcSwitch) ChangeConfigSync(configName string) error {
 		return err
 	}
 	sw.addRules()
-	sw.enableDigest()
+	sw.EnableDigest()
 	return nil
 }
 
