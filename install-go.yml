@@ -1,0 +1,4 @@
+- hosts: localhost
+  roles:
+    - role: gantsign.golang
+      golang_gopath: "$HOME/go"
