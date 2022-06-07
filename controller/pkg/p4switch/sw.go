@@ -7,11 +7,14 @@ import (
 
 	p4_v1 "github.com/p4lang/p4runtime/go/p4/v1"
 	log "github.com/sirupsen/logrus"
+//	"controller/pkg/restapi"
 )
 
 type GrpcSwitch struct {
 	id         uint64
+	conf int
 	configName string
+	configNameAlt string
 	ports      int
 	addr       string
 	log        *log.Entry
@@ -21,6 +24,8 @@ type GrpcSwitch struct {
 	certFile   string
 	p4RtC      *client.Client
 	messageCh  chan *p4_v1.StreamMessageResponse
+	suspect_flows []Flow
+	digests []Digest
 }
 
 func (sw *GrpcSwitch) GetName() string {
@@ -29,4 +34,21 @@ func (sw *GrpcSwitch) GetName() string {
 
 func (sw *GrpcSwitch) GetLogger() *log.Entry {
 	return sw.log
+}
+
+
+func (sw *GrpcSwitch) GetDigests() []Digest{
+	return sw.digests
+}
+
+func (sw *GrpcSwitch) GetConf() int{
+	return sw.conf
+}
+
+func (sw *GrpcSwitch) ChangeConf(){
+	if sw.conf == 0 {
+		sw.conf = 1
+	} else{
+		sw.conf = 0
+	}
 }

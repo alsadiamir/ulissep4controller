@@ -274,6 +274,7 @@ def process_live_traffic(traffic_source, dataset_type, in_labels, max_flow_len, 
             temp_dict = store_packet(pf,temp_dict,start_time_window,max_flow_len)
 
     elif isinstance(traffic_source, p4_util.RuntimeAPI) == True:
+
         extraction=0
         processing=0
 
@@ -314,6 +315,7 @@ def process_live_traffic(traffic_source, dataset_type, in_labels, max_flow_len, 
             else:
                 packets_per_sample_sizes["good"][len(temp_dict[k][start_time_window])]+=1
 
+    
     apply_labels(temp_dict,labelled_flows, in_labels,traffic_type)
 
     return labelled_flows, processing, extraction, packets_per_sample_sizes, packets_in_registers, total_incoming_packets

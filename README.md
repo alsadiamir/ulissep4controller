@@ -38,6 +38,11 @@ make ctrl
 mininet> h1 iperf3 -c h2 -u -R -t 720
 ```
 
+4. Start the attack
+```bash
+make attack
+```
+
 ### Useful links
 
 - https://github.com/antoninbas/p4runtime-go-client

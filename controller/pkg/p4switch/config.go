@@ -25,6 +25,7 @@ func (sw *GrpcSwitch) ChangeConfig(configName string) error {
 	if err := sw.p4RtC.CommitFwdPipe(); err != nil {
 		return err
 	}
+	sw.ChangeConf()
 	return nil
 }
 

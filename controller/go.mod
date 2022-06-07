@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/antoninbas/p4runtime-go-client v0.0.0-20220427185936-f5609a358ca5
 	github.com/golang/protobuf v1.5.2
+	github.com/gorilla/mux v1.8.0
 	github.com/p4lang/p4runtime v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1

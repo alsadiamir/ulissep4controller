@@ -56,7 +56,7 @@ class RuntimeAPI():
     def read_features_registers(self, block):
         """
          return list of lists in this format: [[feature1_val1,feature1_val2, ... ], [feature2_val1, feature2_val2, ...], ... ]
-        """
+        
         results = list()
 
         splitter_value=self.read_register(PACKET_COUNTER+str(block),0)
@@ -65,6 +65,10 @@ class RuntimeAPI():
             # sort values based on current PACKET_COUNTER position
             entries=entries[splitter_value:]+entries[0:splitter_value]
             results.append(entries)
+        """
+
+        results = 
+
         return results
        
     def read_register(self, name,  index=None):

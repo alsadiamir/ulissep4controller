@@ -7,10 +7,16 @@ import (
 	"os"
 	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+//	"google.golang.org/grpc/codes"
+//	"google.golang.org/grpc/status"
 
 	"controller/pkg/p4switch"
+//	"controller/pkg/restapi"
+	"controller/pkg/signals"
+	"net/http"
+	"encoding/json"
+	"github.com/gorilla/mux"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -24,6 +30,32 @@ const (
 	packetCheckRate = 5 * time.Second
 	p4topology      = "../config/topology.json"
 )
+
+var switch_list = []*p4switch.GrpcSwitch{}
+
+func GetDigestsLUCID(w http.ResponseWriter, r *http.Request) {
+    fmt.Println("Endpoint Hit: getDigests")
+    vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+
+    json.NewEncoder(w).Encode(switch_list[i].GetDigests())
+}
+
+func ListenToLUCIDRequests(nDevices int){
+    myRouter := mux.NewRouter().StrictSlash(true)
+    //for i := 0; i < nDevices; i++ {
+    myRouter.HandleFunc("/digests/{n}", GetDigestsLUCID)   
+    //}
+    log.Fatal(http.ListenAndServe(":10000", myRouter))
+}
 
 func main() {
 	var nDevices int
@@ -54,7 +86,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	switchs := make([]*p4switch.GrpcSwitch, 0, nDevices)
 	for i := 0; i < nDevices; i++ {
-		sw := p4switch.CreateSwitch(uint64(i+1), configName, 3, certFile)
+		sw := p4switch.CreateSwitch(uint64(i+1), configName, configNameAlt, 3, certFile)
 		if err := sw.RunSwitch(ctx); err != nil {
 			sw.GetLogger().Errorf("Cannot start")
 			log.Errorf("%v", err)
@@ -66,41 +98,17 @@ func main() {
 		log.Info("No switches started")
 		return
 	}
+	switch_list = switchs
 
-	buff := make([]byte, 10)
-	n, _ := os.Stdin.Read(buff)
-	currentConfig := configName
-	for n > 0 {
-		if currentConfig == configName {
-			currentConfig = configNameAlt
-		} else {
-			currentConfig = configName
-		}
-		log.Infof("Changing switch config to %s", currentConfig)
-		for _, sw := range switchs {
-			go changeConfig(ctx, sw, currentConfig)
-		}
-		log.Info("Press enter to change switch config or EOF to terminate")
-		n, _ = os.Stdin.Read(buff)
-	}
+	ListenToLUCIDRequests(nDevices)
+
+	// clean exit
+	signalCh := signals.RegisterSignalHandlers()
+	log.Info("Do Ctrl-C to quit")
+	<-signalCh
+
 
 	fmt.Println()
 	cancel()
 	time.Sleep(defaultWait)
-}
-
-func changeConfig(ctx context.Context, sw *p4switch.GrpcSwitch, configName string) {
-	if err := sw.ChangeConfig(configName); err != nil {
-		if status.Convert(err).Code() == codes.Canceled {
-			sw.GetLogger().Warn("Failed to update config, restarting")
-			if err := sw.RunSwitch(ctx); err != nil {
-				sw.GetLogger().Errorf("Cannot start")
-				sw.GetLogger().Errorf("%v", err)
-			}
-		} else {
-			sw.GetLogger().Errorf("Error updating swConfig: %v", err)
-		}
-		return
-	}
-	sw.GetLogger().Tracef("Config updated to %s, ", configName)
 }

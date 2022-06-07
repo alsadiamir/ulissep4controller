@@ -5,7 +5,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 #define TRESHOLD 2500
 //microseconds
-#define WINDOW_SIZE 3000000
+#define WINDOW_SIZE 30000000
 
 #define HASH_BASE 10w0
 #define HASH_MAX 10w1023
@@ -50,12 +50,15 @@ struct headers {
 }
 
 struct digest_t {
+    bit<16> type; //=0, asymmetric
     ip4Addr_t srcAddr;
     ip4Addr_t dstAddr;
     bit<9>    srcPort;
     bit<9>    dstPort;
     bit<32>   flow;
+    bit<8>  swap;
 }
+
 /*************************************************************************
 *********************** P A R S E R  ***********************************
 *************************************************************************/
@@ -104,8 +107,6 @@ control MyIngress(inout headers hdr,
     register<bit<48>>(1024) pkt_count;
     register<bit<48>>(1024) flow_count_treshold;
     register<bit<48>>(1024) last_seen;
-    register<bit<48>>(1) number_of_flows;
-
 
     action drop() {
         mark_to_drop(standard_metadata);
@@ -119,9 +120,8 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action send_digest(bit<32> flow) {
-        digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow});
-        //digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr});
+    action send_digest(bit<32> flow, bit<8> swap) {
+        digest<digest_t>(0, {0,hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow, swap});
     }
 
     table ipv4_lpm {
@@ -137,21 +137,6 @@ control MyIngress(inout headers hdr,
         support_timeout = true;
         default_action = NoAction();
     }
-
-/*
-    table ipv4_drop {
-        key = {
-            hdr.ipv4.srcAddr: exact;
-        }
-        actions = {
-            NoAction;
-            drop;
-        }
-        size = 1024;
-        support_timeout = true;
-        default_action = NoAction();
-    }
-*/
 
     apply {
         if (hdr.ipv4.isValid()) {
@@ -171,16 +156,7 @@ control MyIngress(inout headers hdr,
             // compute flow index
             hash(flow,     HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, HASH_MAX);
             hash(flow_opp, HashAlgorithm.crc32, HASH_BASE, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, HASH_MAX);
-/*
-            //count flows   
-            tracked_flow_map.read(flow_hit,     flow);
-	        if(flow_hit == (bit<48>)0) {
-                tracked_flow_map.write(flow, (bit<48>)1);
-                number_of_flows.read(number_of_tracked_flows,     0);
-                number_of_flows.write(0,     number_of_tracked_flows + 1);
-            }
-*/            
-
+  
             pkt_count.read(last_pkt_cnt,     flow);
             pkt_count.read(last_pkt_cnt_opp, flow_opp);
             pkt_count.write(flow, last_pkt_cnt + 1);
@@ -194,7 +170,7 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit,     flow);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow, (bit<48>)1);
-                    send_digest((bit<32>)flow);
+                    send_digest((bit<32>)flow,0);
                 }
             }
 
@@ -206,6 +182,7 @@ control MyIngress(inout headers hdr,
                 pkt_count.write(flow,(bit<48>)0);
                 pkt_count.write(flow_opp,(bit<48>)0);
                 last_seen.write(flow,standard_metadata.ingress_global_timestamp);
+                send_digest((bit<32>)flow,1);
             }
         }
     }

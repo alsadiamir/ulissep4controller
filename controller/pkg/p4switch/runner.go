@@ -19,14 +19,18 @@ const (
 	defaultWait = 250 * time.Millisecond
 )
 
-func CreateSwitch(deviceID uint64, configName string, ports int, certFile string) *GrpcSwitch {
+func CreateSwitch(deviceID uint64, configName string, configNameAlt string, ports int, certFile string) *GrpcSwitch {
 	return &GrpcSwitch{
 		id:         deviceID,
+		conf: 0,
 		configName: configName,
+		configNameAlt: configNameAlt,
 		ports:      ports,
 		addr:       fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
 		log:        log.WithField("ID", deviceID),
 		certFile:   certFile,
+		suspect_flows: []Flow{},
+		digests: []Digest{},
 	}
 }
 

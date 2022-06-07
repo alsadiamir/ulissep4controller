@@ -1,0 +1,17 @@
+{
+  "s1": {
+    "routes": [
+      {
+        "port": 1,
+        "host": "h1",
+        "action": "MyIngress.ipv4_forward"
+      },
+      {
+        "port": 2,
+        "host": "h2",
+        "action": "MyIngress.ipv4_forward"
+      }
+    ],
+    "table": "MyIngress.ipv4_lpm"
+  }
+}

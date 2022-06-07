@@ -83,6 +83,13 @@ func BinaryToIpv4(bytes []byte) net.IP {
 	return net.IPv4(bytes[0], bytes[1], bytes[2], bytes[3])
 }
 
+func BinaryCompressedToUint8(bytes []byte) int {
+	if len(bytes) == 1 {
+		return int(bytes[0])
+	}
+	return 0;
+}
+
 func BinaryCompressedToUint16(bytes []byte) uint16 {
 	if len(bytes) == 2 {
 		return binary.BigEndian.Uint16(bytes)
