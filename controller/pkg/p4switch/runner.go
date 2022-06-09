@@ -115,7 +115,7 @@ func (sw *GrpcSwitch) handleStreamMessages() {
 		case *p4_v1.StreamMessageResponse_Packet:
 			sw.log.Debug("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
-			sw.log.Trace("Received DigestList")
+			//sw.log.Trace("Received DigestList")
 			sw.handleDigest(m.Digest)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Trace("Received IdleTimeoutNotification")

@@ -427,33 +427,33 @@ def main(argv, tcpreplay_pid):
 
         mins, maxs = static_min_max(p4_compatible,time_window)
 
-        while (True):
-            proc = psutil.Process(tcpreplay_pid)
-            if proc.status() == psutil.STATUS_ZOMBIE:
-                print("lucid shutdown: tcpreplay has completed the attack")
-                sys.exit(0) # tcpreplay is already completed, stop lucid
+        #while (True):
+            #proc = psutil.Process(tcpreplay_pid)
+            #if proc.status() == psutil.STATUS_ZOMBIE:
+            #    print("lucid shutdown: tcpreplay has completed the attack")
+            #    sys.exit(0) # tcpreplay is already completed, stop lucid
 
-            samples, process_time, trasmission_time, packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round =  \
-                process_live_traffic(traffic_source, args.dataset_type, labels, max_flow_len, p4_compatible, 
-                traffic_type="all", time_window=time_window)
-            if len(samples) > 0:
-                X,Y_true,keys = dataset_to_list_of_fragments(samples)
-                X = np.array(normalize_and_padding(X, mins, maxs, max_flow_len))
-                if labels is not None:
-                    Y_true = np.array(Y_true)
-                else:
-                    Y_true = None
+        samples, process_time, trasmission_time, packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round =  \
+            process_live_traffic(traffic_source, args.dataset_type, labels, max_flow_len, p4_compatible, 
+            traffic_type="all", time_window=time_window)
+        if len(samples) > 0:
+            X,Y_true,keys = dataset_to_list_of_fragments(samples)
+            X = np.array(normalize_and_padding(X, mins, maxs, max_flow_len))
+            if labels is not None:
+                Y_true = np.array(Y_true)
+            else:
+                Y_true = None
 
-                X = np.expand_dims(X, axis=3)
-                pt0 = time.time()
-                Y_pred = np.squeeze(model.predict(X, batch_size=2048) > 0.5,axis=1)
-                pt1 = time.time()
-                prediction_time = pt1 - pt0
+            X = np.expand_dims(X, axis=3)
+            pt0 = time.time()
+            Y_pred = np.squeeze(model.predict(X, batch_size=2048) > 0.5,axis=1)
+            pt1 = time.time()
+            prediction_time = pt1 - pt0
 
-                [packets] = count_packets_in_dataset([X])
-                report_results(Y_true, Y_pred, packets, model_name_string,
-                               data_source, stats_file, prediction_time,process_time, trasmission_time,packets_per_sample_sizes,
-                               avg_packets_in_registers_in_round, total_packet_captured_in_round)
+            [packets] = count_packets_in_dataset([X])
+            report_results(Y_true, Y_pred, packets, model_name_string,
+                           data_source, stats_file, prediction_time,process_time, trasmission_time,packets_per_sample_sizes,
+                           avg_packets_in_registers_in_round, total_packet_captured_in_round)
 
 def report_results(Y_true, Y_pred,packets, model_name, dataset_filename, stats_file,prediction_time,process_time, 
     trasmission_time,packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round):
@@ -502,21 +502,22 @@ if __name__ == "__main__":
 
    # attack=subprocess.Popen("/usr/bin/tcpreplay --intf1 s1-eth2 --mbps " + str(os.getenv("attack_speed")) + " " + str(os.getenv("ddos_file")), shell=True, stdout=subprocess.DEVNULL)
 
-    background_speed=os.getenv("background_speed")
-    attack_speed=os.getenv("attack_speed")
-    pcap_folder=os.getenv("pcap_folder")
+    #background_speed=os.getenv("background_speed")
+    #attack_speed=os.getenv("attack_speed")
+    #pcap_folder=os.getenv("pcap_folder")
 
-    pcap_file=os.getenv("pcap_file")
+    #pcap_file=os.getenv("pcap_file")
 
-    interface=os.getenv("target_interface")
-    duration=os.getenv("job_duration")
+    #interface=os.getenv("target_interface")
+    #duration=os.getenv("job_duration")
 
     #attack_string="python traffic_generator.py attack -bs {} -as {} -pf {} -i {} -ad {}".format(background_speed, attack_speed, pcap_folder, interface, duration)
-    attack_string="python traffic_generator.py -f {} -i {} -ad {} -s {}".format(pcap_file, interface, duration, attack_speed)
+    #attack_string="python traffic_generator.py -f {} -i {} -ad {} -s {}".format(pcap_file, interface, duration, attack_speed)
     
-    attack=subprocess.Popen(attack_string, shell=True, stdout=subprocess.DEVNULL)
+    #attack=subprocess.Popen(attack_string, shell=True, stdout=subprocess.DEVNULL)
 
-    pid=attack.pid
+    #pid=attack.pid
+    pid=0
     time.sleep(2) # to prevent NaN
     main(sys.argv[1:],pid)
 

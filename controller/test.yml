@@ -1,0 +1,27 @@
+rules:
+    - table: MyIngress.ipv4_lpm
+      key:
+        - 10.0.1.1/24
+      type: ""
+      action: MyIngress.ipv4_forward
+      action_param:
+        - "08:00:00:00:01:00"
+        - "1"
+    - table: MyIngress.ipv4_lpm
+      key:
+        - 10.0.2.1/24
+      type: ""
+      action: MyIngress.ipv4_forward
+      action_param:
+        - "08:00:00:00:02:00"
+        - "2"
+    - table: MyIngress.ipv4_lpm
+      key:
+        - 10.0.1.1
+        - 10.0.1.2
+      type: exact
+      action: ""
+      action_param: []
+program: asymmetric
+digest:
+    - digest_t

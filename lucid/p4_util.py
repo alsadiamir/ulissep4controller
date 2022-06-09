@@ -3,6 +3,7 @@ sys.path.append('/usr/lib/python3/dist-packages') # workaround for bmpy_utils an
 import json
 import bmpy_utils as utils
 from collections import OrderedDict
+import requests
 
 from bm_runtime.standard import Standard
 from bm_runtime.standard.ttypes import *
@@ -67,7 +68,7 @@ class RuntimeAPI():
             results.append(entries)
         """
 
-        results = 
+        results = requests.get(url="http://localhost:10000/digests/0").json()
 
         return results
        

@@ -2,6 +2,7 @@ package p4switch
 
 import (
 	"controller/pkg/util/conversion"
+//	"controller/pkg/util/ymlparser"
 //	"controller/pkg/restapi"
 	"fmt"
 	"net"
@@ -16,21 +17,21 @@ type Flow struct {
 }
 
 type Digest struct {
-    Ingress_timestamp  uint64    `json:"Ingress_timestamp"`
-    Packet_length   int `json:"Packet_length"`
-    Ip_flags    int `json:"Ip_flags"`
-    Tcp_len int `json:"Tcp_len"`
-    Tcp_ack int `json:"Tcp_ack"`
-    Tcp_flags int `json:"Tcp_flags"`
-    Tcp_window_size int `json:"Tcp_window_size"`
-    Udp_len int `json:"Udp_len"`
-    Icmp_type int `json:"Icmp_type"`
+    Ingress_timestamp  uint64    `json:"ingress_timestamp"`
+    Packet_length   int `json:"packet_length"`
+    Ip_flags    int `json:"ip_flags"`
+    Tcp_len int `json:"tcp_len"`
+    Tcp_ack int `json:"tcp_ack"`
+    Tcp_flags int `json:"tcp_flags"`
+    Tcp_window_size int `json:"tcp_window_size"`
+    Udp_len int `json:"udp_len"`
+    Icmp_type int `json:"icmp_type"`
 
-    SrcPort int `json:"SrcPort"`
-    DstPort int `json:"DstPort"`
-    Src_ip  net.IP `json:"Src_ip"`
-    Dst_ip  net.IP `json:"Dst_ip"`
-    Ip_upper_protocol int `json:"Ip_upper_protocol"`   
+    SrcPort int `json:"srcPort"`
+    DstPort int `json:"dstPort"`
+    Src_ip  net.IP `json:"src_ip"`
+    Dst_ip  net.IP `json:"dst_ip"`
+    Ip_upper_protocol int `json:"ip_upper_protocol"`   
 }
 
 
@@ -85,10 +86,10 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 	for _, digestData := range digestList.Data {		
 		str := digestData.GetStruct()
 		mode := int(conversion.BinaryCompressedToUint16(str.Members[0].GetBitstring()))	
-		sw.log.Debugf("mode=%d", mode)		
+		//sw.log.Debugf("mode=%d", mode)		
 		if mode == 0 && sw.GetConf() == 0{	//normal
 			digestStruct := parseDigestData(str)
-			sw.log.Debugf("FLOW SUSPECT NOTIFICATION swap=%d", digestStruct.swap)
+			//sw.log.Debugf("FLOW SUSPECT NOTIFICATION swap=%d", digestStruct.swap)
 			if(digestStruct.swap == 0){
 				sw.log.Debugf("FLOW SUSPECT(hash:%d) %s -> %s", digestStruct.flow, digestStruct.srcAddr, digestStruct.dstAddr)
 				sw.suspect_flows=append(sw.suspect_flows,Flow{
@@ -96,15 +97,18 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 					digestStruct.dstAddr,
 				})
 			}else{
-		       		sw.suspect_flows = []Flow{}
-				changeConfig(sw.ctx,sw,sw.configNameAlt)	
+		       		
+		       		//write new config file in YML
+		       		
+				changeConfig(sw.ctx,sw,sw.configNameAlt)
+				sw.suspect_flows = []Flow{}	
 			}
 		}
 		if mode == 1 && sw.GetConf() == 1{	//alt
 			digestStruct := parseDigestDataL(str)
-			sw.log.Debugf("LUCID NOTIFICATION swap=%d", digestStruct.swap)
+			//sw.log.Debugf("LUCID NOTIFICATION swap=%d", digestStruct.swap)
 			if(digestStruct.swap == 0){
-				sw.log.Debugf("LUCID NOTIFICATION at %d (swap=%d)", digestStruct.ingress_timestamp, digestStruct.swap)
+				//sw.log.Debugf("LUCID NOTIFICATION at %d (swap=%d)", digestStruct.ingress_timestamp, digestStruct.swap)
 				sw.digests=append(sw.digests, Digest{
 					Ingress_timestamp: digestStruct.ingress_timestamp,
 					Packet_length: digestStruct.packet_length,
@@ -121,16 +125,16 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 					Dst_ip: digestStruct.dst_ip,
 					Ip_upper_protocol: digestStruct.ip_upper_protocol,
 				})
-			}else{
-				sw.digests = []Digest{}	
+			}else{	
 				changeConfig(sw.ctx,sw,sw.configName)
+				sw.digests = []Digest{}
 			}
 		}
 	}
 	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
 		sw.errCh <- err
 	}
-	sw.log.Trace("Ack digest list")
+	//sw.log.Trace("Ack digest list")
 }
 
 func parseDigestData(str *p4_v1.P4StructLike) digest_t {

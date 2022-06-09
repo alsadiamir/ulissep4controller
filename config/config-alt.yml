@@ -3,13 +3,15 @@ s1:
   program: simple1
   rules:
     - table: MyIngress.ipv4_lpm1
-      key: 10.0.1.1/24 #h1
+      key: 
+        - 10.0.1.1/24 #h1
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:01:00 #h1
         - 1
     - table: MyIngress.ipv4_lpm1
-      key: 10.0.2.1/24 #h2
+      key:  
+        - 10.0.2.1/24 #h2
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:02:00 #h2
@@ -21,13 +23,15 @@ s3:
   program: simple
   rules:
     - table: MyIngress.ipv4_lpm
-      key: 10.0.1.1/24 #h1
+      key:  
+        - 10.0.1.1/24 #h1
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:01:00 #h1
         - 1
     - table: MyIngress.ipv4_lpm
-      key: 10.0.2.1/24 #h2
+      key:  
+        - 10.0.2.1/24 #h2
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:02:00 #h2
@@ -36,13 +40,15 @@ s4:
   program: simple
   rules:
     - table: MyIngress.ipv4_lpm
-      key: 10.0.1.1/24 #h1
+      key:  
+        - 10.0.1.1/24 #h1
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:01:00 #h1
         - 3
     - table: MyIngress.ipv4_lpm
-      key: 10.0.2.1/24 #h2
+      key:  
+        - 10.0.2.1/24 #h2
       action: MyIngress.ipv4_forward
       action_param:
         - 08:00:00:00:02:00 #h2

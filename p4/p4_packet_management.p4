@@ -80,6 +80,20 @@ control MyIngress(inout headers hdr,
         support_timeout = true;
         default_action = NoAction();
     }
+
+    table ipv4_tag_and_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            //drop;
+            NoAction;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }    
     
 
     apply {
@@ -87,20 +101,10 @@ control MyIngress(inout headers hdr,
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
             meta.swap = (bit<16>) 0;
-            send_digest();
-        
-        /*
-            bit<48> last_detected;
-            last_seen.read(last_detected,0);
 
-            //change config every 30 secs
-            if(meta.ingress_timestamp - last_detected > WINDOW) {
-                last_seen.write(0,meta.ingress_timestamp);
-                //change conf after LUCID says the flow is not a DDoS
-                meta.swap = 1;
+            if(ipv4_tag_and_drop.apply().hit){
                 send_digest();
-            }
-        */
+            }       
             
         }// valid ipv4_address
     }// apply

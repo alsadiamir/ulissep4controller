@@ -41,6 +41,10 @@ func (sw *GrpcSwitch) GetDigests() []Digest{
 	return sw.digests
 }
 
+func (sw *GrpcSwitch) GetFlows() []Flow{
+	return sw.suspect_flows
+}
+
 func (sw *GrpcSwitch) GetConf() int{
 	return sw.conf
 }

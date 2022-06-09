@@ -35,6 +35,7 @@ from sklearn.utils import shuffle as sklearn_shuffle
 from multiprocessing import Process, Manager, Value, Queue
 from util_functions import *
 import p4_util
+import requests
 
 # Sample commands
 # split a pcap file into smaller chunks to leverage multi-core CPUs: tcpdump -r dataset.pcap -w dataset-chunk -C 1000
@@ -55,6 +56,23 @@ DDOS_ATTACK_SPECS = {
     'IDS2018' : IDS2018_DDOS_FLOWS,
     'SYN2020' : CUSTOM_DDOS_SYN
 }
+
+FEATURES_LIST = [
+    'ingress_timestamp', 
+    'packet_length', 
+    'ip_flags', 
+    'tcp_len', 
+    'tcp_ack', 
+    'tcp_flags', 
+    'tcp_window_size', 
+    'udp_len', 
+    'icmp_type', 
+    'srcPort', 
+    'dstPort', 
+    'src_ip', 
+    'dst_ip', 
+    'ip_upper_protocol'
+]
 
 
 vector_proto = CountVectorizer()
@@ -215,16 +233,16 @@ def generate_and_store_packets_from_features(features,temp_dict,start_time_windo
     Generate a list of packets objects from p4 features 
     """
 
-    number_of_packets = len(features[0]) # number of values for a sigle feature, AKA number of packets
+    number_of_packets = len(features) # number of values for a sigle feature, AKA number of packets
  
 
     for index in range(0,number_of_packets):
 
-        dst_port = features[9][index]
-        src_port = features[10][index]
-        dst_ip = str(ipaddress.IPv4Address(features[11][index]))
-        src_ip = str(ipaddress.IPv4Address(features[12][index]))
-        ip_upper_protocol = features[13][index]
+        dst_port = features[index][FEATURES_LIST[9]]
+        src_port = features[index][FEATURES_LIST[10]]
+        dst_ip = str(ipaddress.IPv4Address(features[index][FEATURES_LIST[11]]))
+        src_ip = str(ipaddress.IPv4Address(features[index][FEATURES_LIST[12]]))
+        ip_upper_protocol = features[index][FEATURES_LIST[13]]
 
         if dst_port == 0 or src_port == 0 or dst_ip == 0 or src_ip == 0 or ip_upper_protocol == 0:
             continue
@@ -232,15 +250,15 @@ def generate_and_store_packets_from_features(features,temp_dict,start_time_windo
 
         pf = packet_features()
         # time','packet_length','ip_flags', 'tcp_len', 'tcp_ack', 'tcp_flags', 'tcp_window_size', 'udp_len', 'icmp_type', 'dst_port', 'src_port', 'dst_ip', 'src_ip', 'ip_upper_protocol
-        pf.features_list.append(features[0][index]/1000000) # time, from milliseconds to seconds
-        pf.features_list.append(features[1][index]) # packet_length
-        pf.features_list.append(features[2][index]) # ip_flags
-        pf.features_list.append(features[3][index]) # tcp_len
-        pf.features_list.append(features[4][index]) # tcp_ack
-        pf.features_list.append(features[5][index]) # tcp_flags
-        pf.features_list.append(features[6][index]) # tcp_window_size
-        pf.features_list.append(features[7][index]) # udp_len
-        pf.features_list.append(features[8][index]) # icmp_type
+        pf.features_list.append(features[index][FEATURES_LIST[0]]/1000000) # time, from milliseconds to seconds
+        pf.features_list.append(features[index][FEATURES_LIST[1]]) # packet_length
+        pf.features_list.append(features[index][FEATURES_LIST[2]]) # ip_flags
+        pf.features_list.append(features[index][FEATURES_LIST[3]]) # tcp_len
+        pf.features_list.append(features[index][FEATURES_LIST[4]]) # tcp_ack
+        pf.features_list.append(features[index][FEATURES_LIST[5]]) # tcp_flags
+        pf.features_list.append(features[index][FEATURES_LIST[6]]) # tcp_window_size
+        pf.features_list.append(features[index][FEATURES_LIST[7]]) # udp_len
+        pf.features_list.append(features[index][FEATURES_LIST[8]]) # icmp_type
 
 
        
@@ -278,24 +296,26 @@ def process_live_traffic(traffic_source, dataset_type, in_labels, max_flow_len, 
         extraction=0
         processing=0
 
-        register_size = 2 ** int(os.getenv("register_bits").split("x")[0]) # AxN i.e. 16x2
+        #register_size = 2 ** int(os.getenv("register_bits").split("x")[0]) # AxN i.e. 16x2
 
-        old_block = traffic_source.switch_register_block()
+        #old_block = traffic_source.switch_register_block()
 
         t0=time.time()
-        features = traffic_source.read_features_registers(old_block)
+        #features = traffic_source.read_features_registers(old_block)
+        features = requests.get(url="http://localhost:10000/digests/0").json()
         extraction+=time.time()-t0
 
-        total_incoming_packets = traffic_source.read_register("not_foldable_counter"+str(old_block),0)
-        print(total_incoming_packets)
+        #total_incoming_packets = traffic_source.read_register("not_foldable_counter"+str(old_block),0)
+        #print(total_incoming_packets)
 
-        if total_incoming_packets > register_size:
-            packets_in_registers = register_size # there are overwritings in registers
-        else:
-            packets_in_registers=total_incoming_packets
+        #if total_incoming_packets > register_size:
+        #    packets_in_registers = register_size # there are overwritings in registers
+        #else:
+        total_incoming_packets=len(features)
+        packets_in_registers=total_incoming_packets
 
-        traffic_source.reset_register("not_foldable_counter"+str(old_block))
-        traffic_source.reset_all_registers(old_block)
+        #traffic_source.reset_register("not_foldable_counter"+str(old_block))
+        #traffic_source.reset_all_registers(old_block)
 
         t0=time.time()
         temp_dict = generate_and_store_packets_from_features(features,temp_dict,start_time_window,max_flow_len)

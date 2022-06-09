@@ -6,4 +6,7 @@ topo:
 ctrl:
 	make -C ./controller
 attack:
-	make -C ./lucid
+	make -C ./lucid attack
+lucid:
+	make -C ./lucid lucid
+

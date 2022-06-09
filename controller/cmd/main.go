@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"strconv"
+//	"gopkg.in/yaml.v3"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -111,4 +112,34 @@ func main() {
 	fmt.Println()
 	cancel()
 	time.Sleep(defaultWait)
+
+/*
+    var config *p4switch.SwitchConfig =  p4switch.ParseSwConfig("s1", "../config/singlesw-config.yml")
+
+    config.Rules = append(config.Rules, p4switch.Rule{
+    	Table:       "MyIngress.ipv4_lpm",
+		Key:         []string{"10.0.1.1","10.0.1.2"},
+		Type:        "exact",
+		Action:      "",
+		ActionParam: []string{},
+	})
+
+
+
+    fmt.Println(" --- YAML with maps and arrays ---")
+    fmt.Println("+%v",config)
+
+    file, err := os.OpenFile("test.yml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+    if err != nil {
+        log.Fatalf("error opening/creating file: %v", err)
+    }
+    defer file.Close()
+
+    enc := yaml.NewEncoder(file)
+
+    err = enc.Encode(config)
+    if err != nil {
+        log.Fatalf("error encoding: %v", err)
+    }
+*/
 }

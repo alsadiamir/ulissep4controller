@@ -19,7 +19,7 @@ const macRegexp = "([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})"
 
 type Rule struct {
 	Table       string
-	Key         string
+	Key       []string `yaml:"key"`
 	Type        string
 	Action      string
 	ActionParam []string `yaml:"action_param"`
@@ -29,6 +29,22 @@ type SwitchConfig struct {
 	Rules   []Rule
 	Program string
 	Digest  []string
+}
+
+func ParseSwConfig(swName string, configFileName string) *SwitchConfig{
+	configs := make(map[string]SwitchConfig)
+	configFile, err := ioutil.ReadFile(configFileName)
+	if err != nil {
+		return nil//, err
+	}
+	if err = yaml.Unmarshal(configFile, &configs); err != nil {
+		return nil//, err
+	}
+	config := configs[swName]
+	if config.Program == "" {
+		return nil//, fmt.Errorf("switch config not found in file %s", configFileName)
+	}
+	return &config
 }
 
 func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) {
@@ -68,6 +84,15 @@ func (sw *GrpcSwitch) getDigests() []string {
 func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
 	var tableEntries []*p4_v1.TableEntry
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
+	for _, flow := range sw.GetFlows(){
+		config.Rules = append(config.Rules, Rule{
+	    	Table:       "MyIngress.ipv4_tag_and_drop",
+			Key:         []string{flow.attacker.String(),flow.victim.String()},
+			Type:        "exact",
+			Action:      "NoAction",
+			ActionParam: []string{},
+		})
+	}
 	if err != nil {
 		sw.log.Errorf("Error getting table entries: %v", err)
 		return tableEntries
@@ -79,6 +104,7 @@ func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
 }
 
 func createTableEntry(sw *GrpcSwitch, rule Rule) *p4_v1.TableEntry {
+
 	return sw.p4RtC.NewTableEntry(
 		rule.Table,
 		parseMatchInterface(rule.Type, rule.Key),
@@ -102,21 +128,28 @@ func parseActionParams(actionParams []string) [][]byte {
 	return actionByte
 }
 
-func parseMatchInterface(matchType string, key string) []client.MatchInterface {
+func parseMatchInterface(matchType string, key []string) []client.MatchInterface {
 	//var matchInterface p4_v1.FieldMatch
 	switch matchType {
 	case "exact":
-		ip, err := conversion.IpToBinary(key)
-		if err != nil {
-			log.Errorf("Error parsing ip %s", ip)
+		//var matches []*client.ExactMatch
+		res := make([]client.MatchInterface, len(key))
+
+		for i, k := range key{
+			ip, err := conversion.IpToBinary(k)
+			if err != nil {
+				log.Errorf("Error parsing ip %s", ip)
+			}
+			res[i] = &client.ExactMatch{
+						Value: ip,
+					  }
+
 		}
-		return []client.MatchInterface{&client.ExactMatch{
-			Value: ip,
-		}}
+		return res
 	default:
-		values := strings.Split(key, "/")
+		values := strings.Split(key[0], "/")
 		if len(values) != 2 {
-			log.Errorf("Error parsing match %s -> %s", matchType, key)
+			log.Errorf("Error parsing match %s -> %s", matchType, key[0])
 			return nil
 		}
 		ip, err := conversion.IpToBinary(values[0])
