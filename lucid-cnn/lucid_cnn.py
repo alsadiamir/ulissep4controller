@@ -51,6 +51,8 @@ from sklearn.utils import shuffle
 from lucid_dataset_parser import *
 
 import tensorflow.keras.backend as K
+import requests
+
 tf.random.set_seed(SEED)
 K.set_image_data_format('channels_last')
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -226,7 +228,6 @@ def trainCNNModels(model_name, epochs, X_train, Y_train,X_val, Y_val, dataset_fo
     stats_file.close()
 
 def main(argv, tcpreplay_pid):
-
 
     class ActionToPreType(argparse.Action):
         def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -427,33 +428,101 @@ def main(argv, tcpreplay_pid):
 
         mins, maxs = static_min_max(p4_compatible,time_window)
 
-        #while (True):
+        while (True):
             #proc = psutil.Process(tcpreplay_pid)
             #if proc.status() == psutil.STATUS_ZOMBIE:
             #    print("lucid shutdown: tcpreplay has completed the attack")
             #    sys.exit(0) # tcpreplay is already completed, stop lucid
 
-        samples, process_time, trasmission_time, packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round =  \
-            process_live_traffic(traffic_source, args.dataset_type, labels, max_flow_len, p4_compatible, 
-            traffic_type="all", time_window=time_window)
-        if len(samples) > 0:
-            X,Y_true,keys = dataset_to_list_of_fragments(samples)
-            X = np.array(normalize_and_padding(X, mins, maxs, max_flow_len))
-            if labels is not None:
-                Y_true = np.array(Y_true)
-            else:
-                Y_true = None
+            samples, process_time, trasmission_time, packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round =  \
+                process_live_traffic(traffic_source, args.dataset_type, labels, max_flow_len, p4_compatible, 
+                traffic_type="all", time_window=time_window)
+            if len(samples) > 0:
+                X,Y_true,keys = dataset_to_list_of_fragments(samples)
+                X = np.array(normalize_and_padding(X, mins, maxs, max_flow_len))
+                if labels is not None:
+                    Y_true = np.array(Y_true)
+                else:
+                    Y_true = None
 
-            X = np.expand_dims(X, axis=3)
-            pt0 = time.time()
-            Y_pred = np.squeeze(model.predict(X, batch_size=2048) > 0.5,axis=1)
-            pt1 = time.time()
-            prediction_time = pt1 - pt0
+                X = np.expand_dims(X, axis=3)
+                pt0 = time.time()
+                Y_pred = np.squeeze(model.predict(X, batch_size=2048) > 0.5,axis=1)
+                #print(np.asarray(Y_pred))
 
-            [packets] = count_packets_in_dataset([X])
-            report_results(Y_true, Y_pred, packets, model_name_string,
-                           data_source, stats_file, prediction_time,process_time, trasmission_time,packets_per_sample_sizes,
-                           avg_packets_in_registers_in_round, total_packet_captured_in_round)
+                flows_set = {}
+                flows_set_true = {}
+                for i in range(0,len(keys)):
+                    k = keys[i]
+                    if((k[0],k[2]) not in flows_set):
+                        flows_set[(k[0],k[2])] = []
+                    if((k[0],k[2]) not in flows_set_true):
+                        flows_set_true[(k[0],k[2])] = [] 
+                       
+                    flows_set[(k[0],k[2])].append(Y_pred[i])
+                    flows_set_true[(k[0],k[2])].append(Y_true[i])
+
+                pt1 = time.time()
+                prediction_time = pt1 - pt0
+
+                print("--------------NEW MEASUREMENT---------------")
+                for flow in flows_set.keys():
+                    print(str(flow) + "--> ")
+                    rate = report_results_per_flow(np.array(flows_set_true[flow]), np.array(flows_set[flow])) 
+                    if(rate >= 0.5):
+                        payload={
+                            'attacker' : flow[0],
+                            'victim' :  flow[1]
+                        }
+                        features = requests.post(url="http://localhost:10000/digests/drop/0", json=payload)
+                    else:
+                        payload={
+                            'attacker' : flow[0],
+                            'victim' :  flow[1]
+                        }
+                        features = requests.post(url="http://localhost:10000/digests/removedrop/0", json=payload)    
+
+                
+                
+                time.sleep(5)
+
+
+def report_results_per_flow(Y_true, Y_pred):
+    
+    ddos_rate = '{:04.3f}'.format(sum(Y_pred)/Y_pred.shape[0])
+
+    performance_string = "DDOS :"+ ddos_rate + " "
+
+    if Y_true is not None: # if we have the labels, we can compute the classification accuracy
+        Y_true = Y_true.reshape((Y_true.shape[0], 1))
+        accuracy = accuracy_score(Y_true, Y_pred)
+        try:
+            loss = log_loss(Y_true, Y_pred)
+        except:
+            loss = 0
+        ppv = precision_score(Y_true, Y_pred)
+        f1 = f1_score(Y_true, Y_pred)
+        tn, fp, fn, tp = confusion_matrix(Y_true, Y_pred,labels=[0,1]).ravel()
+        #tnr = tn / (tn + fp)
+        #fpr = fp / (fp + tn)
+        fnr = fn / (fn + tp)
+        tpr = tp / (tp + fn)
+
+        test_string_pre = 'ACCURACY: {:05.4f}'.format(accuracy) + \
+                          " " + 'LOSS: {:05.4f}'.format(loss) + \
+                          " " + 'F1: {:05.4f}'.format(f1) + \
+                          " " + 'PPV: {:05.4f}'.format(ppv) + \
+                          " " + 'TPR: {:05.4f}'.format(tpr) + \
+                          " " + 'FNR: {:05.4f}'.format(fnr) + "\n"
+                          #" " + 'FPR: {:05.4f}'.format(fpr) + \
+                          #" " + 'TNR: {:05.4f}'.format(tnr) + 
+        #output_header = PREDICTION_HEADER[:-1]
+        output_string = performance_string + test_string_pre
+
+    #print(output_header)
+    print(output_string)
+    return float(ddos_rate)
+
 
 def report_results(Y_true, Y_pred,packets, model_name, dataset_filename, stats_file,prediction_time,process_time, 
     trasmission_time,packets_per_sample_sizes, avg_packets_in_registers_in_round, total_packet_captured_in_round):
@@ -500,23 +569,6 @@ def report_results(Y_true, Y_pred,packets, model_name, dataset_filename, stats_f
 
 if __name__ == "__main__":
 
-   # attack=subprocess.Popen("/usr/bin/tcpreplay --intf1 s1-eth2 --mbps " + str(os.getenv("attack_speed")) + " " + str(os.getenv("ddos_file")), shell=True, stdout=subprocess.DEVNULL)
-
-    #background_speed=os.getenv("background_speed")
-    #attack_speed=os.getenv("attack_speed")
-    #pcap_folder=os.getenv("pcap_folder")
-
-    #pcap_file=os.getenv("pcap_file")
-
-    #interface=os.getenv("target_interface")
-    #duration=os.getenv("job_duration")
-
-    #attack_string="python traffic_generator.py attack -bs {} -as {} -pf {} -i {} -ad {}".format(background_speed, attack_speed, pcap_folder, interface, duration)
-    #attack_string="python traffic_generator.py -f {} -i {} -ad {} -s {}".format(pcap_file, interface, duration, attack_speed)
-    
-    #attack=subprocess.Popen(attack_string, shell=True, stdout=subprocess.DEVNULL)
-
-    #pid=attack.pid
     pid=0
     time.sleep(2) # to prevent NaN
     main(sys.argv[1:],pid)

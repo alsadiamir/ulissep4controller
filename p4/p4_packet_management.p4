@@ -94,17 +94,33 @@ control MyIngress(inout headers hdr,
         support_timeout = true;
         default_action = NoAction();
     }    
-    
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }       
 
     apply {
 
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
-            meta.swap = (bit<16>) 0;
 
             if(ipv4_tag_and_drop.apply().hit){
                 send_digest();
-            }       
+            }   
+
+            ipv4_drop.apply();
+            
+            meta.swap = (bit<16>) 0;
             
         }// valid ipv4_address
     }// apply
@@ -117,10 +133,33 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply { 
-       
+    action drop() {
+        mark_to_drop(standard_metadata);
+        exit;
     }
-}
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    } 
+
+    apply {       
+
+        if (hdr.ipv4.isValid()) {
+            ipv4_drop.apply();                  
+        }// valid ipv4_address
+
+    }
+}//MyEgress
 
 /*************************************************************************
 *************   C H E C K S U M    C O M P U T A T I O N   **************

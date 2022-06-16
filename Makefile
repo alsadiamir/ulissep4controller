@@ -2,11 +2,11 @@ DELAY = 100ms
 name = simple
 
 topo:
-	make -C ./mininet 
+	make -C mininet
 ctrl:
-	make -C ./controller
+	make -C controller
 attack:
-	make -C ./lucid attack
+	make -C atk
 lucid:
-	make -C ./lucid lucid
+	make -C lucid-cnn
 

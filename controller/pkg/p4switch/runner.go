@@ -30,6 +30,7 @@ func CreateSwitch(deviceID uint64, configName string, configNameAlt string, port
 		log:        log.WithField("ID", deviceID),
 		certFile:   certFile,
 		suspect_flows: []Flow{},
+		dropped_flows: []Flow{},
 		digests: []Digest{},
 	}
 }
@@ -80,14 +81,14 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
-	//
+
 	sw.errCh = make(chan error, 1)
 	go sw.handleStreamMessages()
 	go sw.startRunner()
-	//
+
 	sw.addRules()
 	sw.enableDigest()
-	//
+
 	sw.log.Info("Switch started")
 	return nil
 }
@@ -115,7 +116,7 @@ func (sw *GrpcSwitch) handleStreamMessages() {
 		case *p4_v1.StreamMessageResponse_Packet:
 			sw.log.Debug("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
-			//sw.log.Trace("Received DigestList")
+			//sw.log.Trace("Received Digest")
 			sw.handleDigest(m.Digest)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Trace("Received IdleTimeoutNotification")

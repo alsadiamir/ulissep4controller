@@ -335,7 +335,6 @@ def process_live_traffic(traffic_source, dataset_type, in_labels, max_flow_len, 
             else:
                 packets_per_sample_sizes["good"][len(temp_dict[k][start_time_window])]+=1
 
-    
     apply_labels(temp_dict,labelled_flows, in_labels,traffic_type)
 
     return labelled_flows, processing, extraction, packets_per_sample_sizes, packets_in_registers, total_incoming_packets
@@ -365,10 +364,6 @@ def store_packet(pf,temp_dict,start_time_window, max_flow_len):
 
             elif pf.id_bwd in temp_dict and start_time_window not in temp_dict[pf.id_bwd]:
                 temp_dict[pf.id_bwd][start_time_window] = np.array([pf.features_list])
-
-
-
-
 
     return temp_dict
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"io/ioutil"
 
 //	"google.golang.org/grpc/codes"
 //	"google.golang.org/grpc/status"
@@ -35,7 +36,7 @@ const (
 var switch_list = []*p4switch.GrpcSwitch{}
 
 func GetDigestsLUCID(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("Endpoint Hit: getDigests")
+
     vars := mux.Vars(r)
     n := vars["n"]
 
@@ -50,11 +51,71 @@ func GetDigestsLUCID(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(switch_list[i].GetDigests())
 }
 
+func contains(flow p4switch.Flow, dropped_flows []p4switch.Flow) bool {
+    for _, f := range dropped_flows {
+        if f.GetAttacker().Equal(flow.GetAttacker()) && f.GetVictim().Equal(flow.GetVictim()) {
+            return true
+        }
+    }
+    return false
+}
+
+func DropFlowLUCID(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+    var flow p4switch.Flow 
+
+    json.Unmarshal(reqBody, &flow)
+
+	vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    if contains(flow, switch_list[i].GetDroppedFlows()) == false {
+    	switch_list[i].AddDroppedFlow(flow)
+    	switch_list[i].DropFlow(flow)
+    } 
+
+    json.NewEncoder(w).Encode(flow)
+}
+
+func RemoveDropFlowLUCID(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+    var flow p4switch.Flow 
+
+    json.Unmarshal(reqBody, &flow)
+
+	vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    if contains(flow, switch_list[i].GetDroppedFlows()) == true {
+    	switch_list[i].RemoveDroppedFlow(flow)
+    	switch_list[i].RemoveDropFlow(flow)
+    } 
+
+    json.NewEncoder(w).Encode(flow)
+}
+
+
 func ListenToLUCIDRequests(nDevices int){
     myRouter := mux.NewRouter().StrictSlash(true)
-    //for i := 0; i < nDevices; i++ {
-    myRouter.HandleFunc("/digests/{n}", GetDigestsLUCID)   
-    //}
+
+    myRouter.HandleFunc("/digests/{n}", GetDigestsLUCID) 
+    myRouter.HandleFunc("/digests/drop/{n}", DropFlowLUCID).Methods("POST")  
+	myRouter.HandleFunc("/digests/removedrop/{n}", RemoveDropFlowLUCID).Methods("POST") 
+
     log.Fatal(http.ListenAndServe(":10000", myRouter))
 }
 
@@ -113,33 +174,4 @@ func main() {
 	cancel()
 	time.Sleep(defaultWait)
 
-/*
-    var config *p4switch.SwitchConfig =  p4switch.ParseSwConfig("s1", "../config/singlesw-config.yml")
-
-    config.Rules = append(config.Rules, p4switch.Rule{
-    	Table:       "MyIngress.ipv4_lpm",
-		Key:         []string{"10.0.1.1","10.0.1.2"},
-		Type:        "exact",
-		Action:      "",
-		ActionParam: []string{},
-	})
-
-
-
-    fmt.Println(" --- YAML with maps and arrays ---")
-    fmt.Println("+%v",config)
-
-    file, err := os.OpenFile("test.yml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-    if err != nil {
-        log.Fatalf("error opening/creating file: %v", err)
-    }
-    defer file.Close()
-
-    enc := yaml.NewEncoder(file)
-
-    err = enc.Encode(config)
-    if err != nil {
-        log.Fatalf("error encoding: %v", err)
-    }
-*/
 }

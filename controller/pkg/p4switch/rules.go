@@ -84,15 +84,18 @@ func (sw *GrpcSwitch) getDigests() []string {
 func getAllTableEntries(sw *GrpcSwitch) []*p4_v1.TableEntry {
 	var tableEntries []*p4_v1.TableEntry
 	config, err := parseSwConfig(sw.GetName(), sw.configName)
+	
+	//adding suspect flows to monitor
 	for _, flow := range sw.GetFlows(){
 		config.Rules = append(config.Rules, Rule{
 	    	Table:       "MyIngress.ipv4_tag_and_drop",
-			Key:         []string{flow.attacker.String(),flow.victim.String()},
+			Key:         []string{flow.Attacker.String(),flow.Victim.String()},
 			Type:        "exact",
 			Action:      "NoAction",
 			ActionParam: []string{},
 		})
 	}
+
 	if err != nil {
 		sw.log.Errorf("Error getting table entries: %v", err)
 		return tableEntries

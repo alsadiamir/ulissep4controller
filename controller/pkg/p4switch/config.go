@@ -48,11 +48,48 @@ func (sw *GrpcSwitch) addTableEntry(entry *p4_v1.TableEntry) {
 	sw.log.Tracef("Added entry: %+v", entry)
 }
 
+func (sw *GrpcSwitch) removeTableEntry(entry *p4_v1.TableEntry) {
+	if err := sw.p4RtC.DeleteTableEntry(entry); err != nil {
+		sw.log.Errorf("Error deleting entry: %+v\n%v", entry, err)
+		sw.errCh <- err
+		return
+	}
+	sw.log.Tracef("Deleted entry: %+v", entry)
+}
+
 func (sw *GrpcSwitch) addRules() {
 	entries := getAllTableEntries(sw)
 	for _, entry := range entries {
 		sw.addTableEntry(entry)
 	}
+}
+
+func (sw *GrpcSwitch) DropFlow(flow Flow) {
+
+	rule := Rule{
+	    	Table:       "MyEgress.ipv4_drop",
+			Key:         []string{flow.Attacker.String(),flow.Victim.String()},
+			Type:        "exact",
+			Action:      "MyEgress.drop",
+			ActionParam: []string{},
+	}
+	tableEntry := createTableEntry(sw, rule)
+
+	sw.addTableEntry(tableEntry)
+}
+
+func (sw *GrpcSwitch) RemoveDropFlow(flow Flow) {
+
+	rule := Rule{
+	    	Table:       "MyEgress.ipv4_drop",
+			Key:         []string{flow.Attacker.String(),flow.Victim.String()},
+			Type:        "exact",
+			Action:      "MyEgress.drop",
+			ActionParam: []string{},
+	}
+	tableEntry := createTableEntry(sw, rule)
+
+	sw.removeTableEntry(tableEntry)
 }
 
 func readFileBytes(filePath string) []byte {

@@ -1,4 +1,5 @@
-p4program = asymmetric
+p4program = asymmetric_countmin
+
 topology = topology.json
 singlesw = singlesw-topo.json
 

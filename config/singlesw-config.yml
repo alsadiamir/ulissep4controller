@@ -1,6 +1,6 @@
 ---
 s1:
-  program: asymmetric
+  program: asymmetric_countmin
   digest:
     - digest_t
   rules:

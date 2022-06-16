@@ -2,8 +2,6 @@ package p4switch
 
 import (
 	"controller/pkg/util/conversion"
-//	"controller/pkg/util/ymlparser"
-//	"controller/pkg/restapi"
 	"fmt"
 	"net"
 	"time"
@@ -12,9 +10,18 @@ import (
 )
 
 type Flow struct {
-	attacker net.IP
-	victim net.IP
+	Attacker net.IP `json:"attacker"`
+	Victim net.IP `json:"victim"`
 }
+
+func (flow *Flow) GetAttacker() net.IP {
+	return flow.Attacker
+}
+
+func (flow *Flow) GetVictim() net.IP {
+	return flow.Victim
+}
+
 
 type Digest struct {
     Ingress_timestamp  uint64    `json:"ingress_timestamp"`
@@ -82,7 +89,24 @@ type digestL_t struct {
         swap int
 }
 
+func (sw *GrpcSwitch) pruneDigests() {
+	var size = len(sw.digests)
+	if size > 0 {
+		var pruneDigests = []Digest{}
+
+		var now_time = sw.digests[size-1].Ingress_timestamp
+
+		for i:=size-1; i > 0; i-- {
+			if now_time - sw.digests[i].Ingress_timestamp < 30000000 { //if the timestamp is within 30 seconds from the last tracked timestamp
+				pruneDigests = append(pruneDigests, sw.digests[i])
+			}
+		}
+		sw.digests = pruneDigests
+	}
+}
+
 func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
+	sw.pruneDigests()
 	for _, digestData := range digestList.Data {		
 		str := digestData.GetStruct()
 		mode := int(conversion.BinaryCompressedToUint16(str.Members[0].GetBitstring()))	
@@ -97,16 +121,13 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 					digestStruct.dstAddr,
 				})
 			}else{
-		       		
-		       		//write new config file in YML
-		       		
 				changeConfig(sw.ctx,sw,sw.configNameAlt)
 				sw.suspect_flows = []Flow{}	
 			}
 		}
 		if mode == 1 && sw.GetConf() == 1{	//alt
 			digestStruct := parseDigestDataL(str)
-			//sw.log.Debugf("LUCID NOTIFICATION swap=%d", digestStruct.swap)
+			//sw.log.Debugf("LUCID NOTIFICATION flow -> (%s,%s)", digestStruct.src_ip.String(), digestStruct.dst_ip.String())
 			if(digestStruct.swap == 0){
 				//sw.log.Debugf("LUCID NOTIFICATION at %d (swap=%d)", digestStruct.ingress_timestamp, digestStruct.swap)
 				sw.digests=append(sw.digests, Digest{
@@ -134,7 +155,6 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 	if err := sw.p4RtC.AckDigestList(digestList); err != nil {
 		sw.errCh <- err
 	}
-	//sw.log.Trace("Ack digest list")
 }
 
 func parseDigestData(str *p4_v1.P4StructLike) digest_t {
