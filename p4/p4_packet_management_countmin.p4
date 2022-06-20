@@ -2,7 +2,13 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV4 = 0x800;
+
+#define PACKETS 131072
+#define PACKET_COUNTER_WIDTH 17
+
+//up to 1 packet over 16
+#define SAMPLING_COUNTER_WIDTH 4
+
 #define TRESHOLD 2500
 //microseconds
 #define WINDOW_SIZE 30000000
@@ -10,101 +16,39 @@ const bit<16> TYPE_IPV4 = 0x800;
 #define HASH_BASE 10w0
 #define HASH_MAX 10w1023
 
-/*************************************************************************
-*********************** H E A D E R S  ***********************************
-*************************************************************************/
 
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
 
-header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
-}
 
-header ipv4_t {
-    bit<4>    version;
-    bit<4>    ihl;
-    bit<8>    diffserv;
-    bit<16>   totalLen;
-    bit<16>   identification;
-    bit<3>    flags;
-    bit<13>   fragOffset;
-    bit<8>    ttl;
-    bit<8>    protocol;
-    bit<16>   hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-    ip4Addr_t realsrcAddr;
-    ip4Addr_t realdstAddr;
-}
 
-struct metadata {
-    bit<48> min_flow;
-    bit<48> min_flow_opp;
-}
+#include "includes/headers.p4"
 
-struct headers {
-    ethernet_t   ethernet;
-    ipv4_t       ipv4;
-}
+#include "includes/registers.p4"
 
-struct digest_t {
+#include "includes/parser.p4"
+
+/*
+struct digestA_t {
     bit<16> type; //=0, asymmetric
     ip4Addr_t srcAddr;
     ip4Addr_t dstAddr;
     bit<9>    srcPort;
     bit<9>    dstPort;
-//    bit<32>   flow;
+    bit<32>   flow;
     bit<8>  swap;
 }
-/*************************************************************************
-*********************** P A R S E R  ***********************************
-*************************************************************************/
+*/
 
-parser MyParser(packet_in packet,
-                out headers hdr,
-                inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-
-    state start {
-        transition parse_ethernet;
-    }
-
-    state parse_ethernet {
-        packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4: parse_ipv4;
-            default: accept;
-        }
-    }
-
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
-        transition accept;
-    }
-
-}
-
-/*************************************************************************
-************   C H E C K S U M    V E R I F I C A T I O N   *************
-*************************************************************************/
-
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
     apply {  }
 }
 
 
-/*************************************************************************
-**************  I N G R E S S   P R O C E S S I N G   *******************
-*************************************************************************/
-
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-
     register<bit<48>>(1024) pkt_count_0;
     register<bit<48>>(1024) pkt_count_1;
     register<bit<48>>(1024) flow_count_treshold;
@@ -116,15 +60,44 @@ control MyIngress(inout headers hdr,
         exit;
     }
 
-    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
-        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
-        hdr.ethernet.dstAddr = dstAddr;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+    action send_digest_lucid() {
+        digest<digest_t>(0, {
+            1,
+            meta.ingress_timestamp,
+            meta.packet_length, 
+            meta.ip_flags,
+            meta.tcp_len,
+            meta.tcp_ack,
+            meta.tcp_flags,
+            meta.tcp_window_size,
+            meta.udp_len,
+            meta.icmp_type,
+            meta.srcPort,
+            meta.dstPort,
+            meta.src_ip,
+            meta.dst_ip,
+            meta.ip_upper_protocol,
+            meta.swap});
     }
 
-    action send_digest(bit<32> flow, bit<8> swap) {
-        digest<digest_t>(0, {0,hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow, swap});
+    action send_digest_asym(bit<32> flow, bit<8> swap) {
+        digest<digest_t>(0, {
+            1,
+            0,
+            0, 
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            meta.srcPort,
+            meta.dstPort,
+            meta.src_ip,
+            meta.dst_ip,
+            0,
+            meta.swap});
     }
 
     action find_min(bit<48> pkt_cnt0, bit<48> pkt_cnt1, bit<48> pkt_cnt_opp0, bit<48> pkt_cnt_opp1){
@@ -144,6 +117,13 @@ control MyIngress(inout headers hdr,
         }  
     }
 
+    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = dstAddr;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+    }
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -158,11 +138,40 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
+    table ipv4_tag_and_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            //drop;
+            NoAction;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }    
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }       
+
     apply {
+
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
 
-            bit<48> flow_hit;
+                        bit<48> flow_hit;
             bit<32> flow0;
             bit<32> flow_opp0;
             bit<48> last_pkt_cnt0;
@@ -218,7 +227,7 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit,     flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);
-                    send_digest((bit<32>)flow0,0);
+                    send_digest_asym((bit<32>)flow0,0);
                 }
             }
 
@@ -238,13 +247,19 @@ control MyIngress(inout headers hdr,
                 
                 //only updating the first flow
                 last_seen.write(flow0,standard_metadata.ingress_global_timestamp);
-
-                //sending swap signal
-                send_digest(flow0,1);
             }
-        }
-    }
-}
+
+            if(ipv4_tag_and_drop.apply().hit){
+                send_digest_lucid();
+            }   
+
+            ipv4_drop.apply();
+            
+            meta.swap = (bit<16>) 0;
+            
+        }// valid ipv4_address
+    }// apply
+}// MyIngress
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
@@ -253,8 +268,33 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
-}
+    action drop() {
+        mark_to_drop(standard_metadata);
+        exit;
+    }
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    } 
+
+    apply {       
+
+        if (hdr.ipv4.isValid()) {
+            ipv4_drop.apply();                  
+        }// valid ipv4_address
+
+    }
+}//MyEgress
 
 /*************************************************************************
 *************   C H E C K S U M    C O M P U T A T I O N   **************
@@ -277,17 +317,23 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
               hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
-    }
+    } 
 }
 
 /*************************************************************************
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
+
+
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.icmp);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.tcp);
+        
     }
 }
 

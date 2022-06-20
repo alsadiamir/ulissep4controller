@@ -1,8 +1,9 @@
 ---
 s1:
-  program: p4_packet_management
+  program: p4_packet_management_countmin
   digest:
     - digest_t
+    - digestA_t
   rules:
     - table: MyIngress.ipv4_lpm
       key:  

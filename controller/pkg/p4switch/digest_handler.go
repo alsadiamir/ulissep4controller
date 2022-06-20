@@ -67,7 +67,7 @@ type digest_t struct {
 	dstAddr  net.IP
 	srcPort  int
 	dstPort  int
-	flow uint32
+//	flow uint32
 	swap int
 }
 
@@ -115,7 +115,7 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 			digestStruct := parseDigestData(str)
 			//sw.log.Debugf("FLOW SUSPECT NOTIFICATION swap=%d", digestStruct.swap)
 			if(digestStruct.swap == 0){
-				sw.log.Debugf("FLOW SUSPECT(hash:%d) %s -> %s", digestStruct.flow, digestStruct.srcAddr, digestStruct.dstAddr)
+				sw.log.Debugf("FLOW SUSPECT %s -> %s", digestStruct.srcAddr, digestStruct.dstAddr)
 				sw.suspect_flows=append(sw.suspect_flows,Flow{
 					digestStruct.srcAddr,
 					digestStruct.dstAddr,
@@ -130,22 +130,30 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 			//sw.log.Debugf("LUCID NOTIFICATION flow -> (%s,%s)", digestStruct.src_ip.String(), digestStruct.dst_ip.String())
 			if(digestStruct.swap == 0){
 				//sw.log.Debugf("LUCID NOTIFICATION at %d (swap=%d)", digestStruct.ingress_timestamp, digestStruct.swap)
-				sw.digests=append(sw.digests, Digest{
-					Ingress_timestamp: digestStruct.ingress_timestamp,
-					Packet_length: digestStruct.packet_length,
-					Ip_flags: digestStruct.ip_flags,
-					Tcp_len: digestStruct.tcp_len,
-					Tcp_ack: digestStruct.tcp_ack,
-					Tcp_flags: digestStruct.tcp_flags,
-					Tcp_window_size: digestStruct.tcp_window_size,
-					Udp_len: digestStruct.udp_len,
-					Icmp_type: digestStruct.icmp_type,
-					SrcPort: digestStruct.srcPort,
-					DstPort: digestStruct.dstPort,
-					Src_ip: digestStruct.src_ip,
-					Dst_ip: digestStruct.dst_ip,
-					Ip_upper_protocol: digestStruct.ip_upper_protocol,
-				})
+				if(digestStruct.ingress_timestamp == 0){
+					sw.log.Debugf("FLOW SUSPECT %s -> %s", digestStruct.src_ip, digestStruct.dst_ip)
+					sw.suspect_flows=append(sw.suspect_flows,Flow{
+						digestStruct.src_ip,
+						digestStruct.dst_ip,
+					})
+				} else {
+					sw.digests=append(sw.digests, Digest{
+						Ingress_timestamp: digestStruct.ingress_timestamp,
+						Packet_length: digestStruct.packet_length,
+						Ip_flags: digestStruct.ip_flags,
+						Tcp_len: digestStruct.tcp_len,
+						Tcp_ack: digestStruct.tcp_ack,
+						Tcp_flags: digestStruct.tcp_flags,
+						Tcp_window_size: digestStruct.tcp_window_size,
+						Udp_len: digestStruct.udp_len,
+						Icmp_type: digestStruct.icmp_type,
+						SrcPort: digestStruct.srcPort,
+						DstPort: digestStruct.dstPort,
+						Src_ip: digestStruct.src_ip,
+						Dst_ip: digestStruct.dst_ip,
+						Ip_upper_protocol: digestStruct.ip_upper_protocol,
+					})
+				}
 			}else{	
 				changeConfig(sw.ctx,sw,sw.configName)
 				sw.digests = []Digest{}
@@ -164,15 +172,15 @@ func parseDigestData(str *p4_v1.P4StructLike) digest_t {
 	dstAddr := conversion.BinaryToIpv4(dstAddrByte)
 	srcPort := conversion.BinaryCompressedToUint16(str.Members[3].GetBitstring())
 	dstPort := conversion.BinaryCompressedToUint16(str.Members[4].GetBitstring())
-	flow := conversion.BinaryCompressedToUint32(str.Members[5].GetBitstring())
-	swap := conversion.BinaryCompressedToUint16(str.Members[6].GetBitstring())
+//	flow := conversion.BinaryCompressedToUint32(str.Members[5].GetBitstring())
+	swap := conversion.BinaryCompressedToUint16(str.Members[5].GetBitstring())
 	
 	return digest_t{
 		srcAddr:  srcAddr,
 		dstAddr:  dstAddr,
 		srcPort:  int(srcPort),
 		dstPort:  int(dstPort),
-		flow: flow,
+//		flow: flow,
 		swap: int(swap),
 	}
 }
