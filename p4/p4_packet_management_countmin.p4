@@ -80,7 +80,7 @@ control MyIngress(inout headers hdr,
             meta.swap});
     }
 
-    action send_digest_asym(bit<32> flow, bit<8> swap) {
+    action send_digest_asym(bit<8> swap) {
         digest<digest_t>(0, {
             1,
             0,
@@ -227,7 +227,7 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit,     flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);
-                    send_digest_asym((bit<32>)flow0,0);
+                    send_digest_asym(0);
                 }
             }
 

@@ -1,4 +1,4 @@
-p4program = p4_packet_management_countmin
+p4program = asymmetric_countmin
 
 topology = topology.json
 singlesw = singlesw-topo.json

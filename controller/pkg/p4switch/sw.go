@@ -29,7 +29,35 @@ type GrpcSwitch struct {
 	digests []Digest
 }
 
+type SwitchInfo struct {
+	Name 	string `json:"Switch Name"`
+	Id         uint64 `json:"Device Id"`
+	ProgramName string `json:"Program name"`
+	Addr       string `json:"Address"`
+}
 
+type FlowList struct{
+	F Flow `json:"Flow"`
+}
+
+func (sw *GrpcSwitch) GetSwitchInfo() SwitchInfo {
+	return SwitchInfo{
+		Name : sw.GetName(),
+		Id : sw.id,
+		ProgramName : sw.getProgramName()+".p4",
+		Addr : sw.addr,
+	}
+}
+
+func (sw *GrpcSwitch) GetSwitchFlowList() []FlowList {
+	flowlist := []FlowList{}
+
+	for _, f:= range sw.suspect_flows{
+		flowlist = append(flowlist, 
+			FlowList{F: f} )
+	}
+	return flowlist
+}
 
 func (sw *GrpcSwitch) GetName() string {
 	return "s" + strconv.FormatUint(sw.id, 10)
@@ -59,6 +87,18 @@ func (sw *GrpcSwitch) RemoveDroppedFlow(flow Flow) {
         }
 	}
 	sw.dropped_flows = dropped_flows
+}
+
+func (sw *GrpcSwitch) UpdateSuspectFlow(flow Flow) {
+	suspect_flows := []Flow{}
+	for _,f := range sw.suspect_flows{
+		if f.GetAttacker().Equal(flow.GetAttacker()) && f.GetVictim().Equal(flow.GetVictim()) {
+            suspect_flows = append(suspect_flows,flow)
+        } else{
+        	suspect_flows = append(suspect_flows,f)
+        }
+	}
+	sw.suspect_flows = suspect_flows
 }
 
 func (sw *GrpcSwitch) GetDroppedFlows() []Flow{

@@ -123,8 +123,8 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action send_digest(bit<32> flow, bit<8> swap) {
-        digest<digest_t>(0, {0,hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow, swap});
+    action send_digest(bit<8> swap) {
+        digest<digest_t>(0, {0,hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, swap});
     }
 
     action find_min(bit<48> pkt_cnt0, bit<48> pkt_cnt1, bit<48> pkt_cnt_opp0, bit<48> pkt_cnt_opp1){
@@ -218,7 +218,7 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit,     flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);
-                    send_digest((bit<32>)flow0,0);
+                    send_digest(0);
                 }
             }
 
@@ -240,7 +240,7 @@ control MyIngress(inout headers hdr,
                 last_seen.write(flow0,standard_metadata.ingress_global_timestamp);
 
                 //sending swap signal
-                send_digest(flow0,1);
+                send_digest(1);
             }
         }
     }

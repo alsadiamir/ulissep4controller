@@ -9,4 +9,6 @@ attack:
 	make -C atk
 lucid:
 	make -C lucid-cnn
+ui:
+	make -C ui-p4ctrl
 

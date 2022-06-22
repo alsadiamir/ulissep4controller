@@ -35,8 +35,58 @@ const (
 
 var switch_list = []*p4switch.GrpcSwitch{}
 
+func GetSwitchInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+		
+    vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    json.NewEncoder(w).Encode(switch_list[i].GetSwitchInfo())
+}
+
+func GetSwitchSuspectFlows(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+		
+    vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    json.NewEncoder(w).Encode(switch_list[i].GetFlows())
+}
+
+func GetSwitchDroppedFlows(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+		
+    vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    json.NewEncoder(w).Encode(switch_list[i].GetDroppedFlows())
+}
+
 func GetDigestsLUCID(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+		
     vars := mux.Vars(r)
     n := vars["n"]
 
@@ -51,8 +101,8 @@ func GetDigestsLUCID(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(switch_list[i].GetDigests())
 }
 
-func contains(flow p4switch.Flow, dropped_flows []p4switch.Flow) bool {
-    for _, f := range dropped_flows {
+func contains(flow p4switch.Flow, flows []p4switch.Flow) bool {
+    for _, f := range flows {
         if f.GetAttacker().Equal(flow.GetAttacker()) && f.GetVictim().Equal(flow.GetVictim()) {
             return true
         }
@@ -79,6 +129,29 @@ func DropFlowLUCID(w http.ResponseWriter, r *http.Request) {
     if contains(flow, switch_list[i].GetDroppedFlows()) == false {
     	switch_list[i].AddDroppedFlow(flow)
     	switch_list[i].DropFlow(flow)
+    } 
+
+    json.NewEncoder(w).Encode(flow)
+}
+
+func UpdateDDoSLUCID(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+    var flow p4switch.Flow 
+
+    json.Unmarshal(reqBody, &flow)
+
+	vars := mux.Vars(r)
+    n := vars["n"]
+
+    i, err := strconv.Atoi(n)
+    if err != nil {
+        // handle error
+        fmt.Println(err)
+        os.Exit(2)
+    }
+
+    if contains(flow, switch_list[i].GetFlows()) == true {
+    	switch_list[i].UpdateSuspectFlow(flow)
     } 
 
     json.NewEncoder(w).Encode(flow)
@@ -113,8 +186,12 @@ func ListenToLUCIDRequests(nDevices int){
     myRouter := mux.NewRouter().StrictSlash(true)
 
     myRouter.HandleFunc("/digests/{n}", GetDigestsLUCID) 
+    myRouter.HandleFunc("/info/{n}", GetSwitchInfo) 
+    myRouter.HandleFunc("/suspect/{n}", GetSwitchSuspectFlows) 
+    myRouter.HandleFunc("/dropped/{n}", GetSwitchDroppedFlows) 
     myRouter.HandleFunc("/digests/drop/{n}", DropFlowLUCID).Methods("POST")  
 	myRouter.HandleFunc("/digests/removedrop/{n}", RemoveDropFlowLUCID).Methods("POST") 
+	myRouter.HandleFunc("/digests/updateflows/{n}", UpdateDDoSLUCID).Methods("POST") 
 
     log.Fatal(http.ListenAndServe(":10000", myRouter))
 }

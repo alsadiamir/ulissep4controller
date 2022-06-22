@@ -468,18 +468,18 @@ def main(argv, tcpreplay_pid):
                 print("--------------NEW MEASUREMENT---------------")
                 for flow in flows_set.keys():
                     print(str(flow) + "--> ")
-                    rate = report_results_per_flow(np.array(flows_set_true[flow]), np.array(flows_set[flow])) 
-                    if(rate >= 0.5):
-                        payload={
+                    rate = report_results_per_flow(np.array(flows_set_true[flow]), np.array(flows_set[flow]))
+                     
+                    payload={
                             'attacker' : flow[0],
-                            'victim' :  flow[1]
+                            'victim' :  flow[1],
+                            'ddos' : rate
                         }
+                    features = requests.post(url="http://localhost:10000/digests/updateflows/0", json=payload)
+
+                    if(rate >= 0.5):
                         features = requests.post(url="http://localhost:10000/digests/drop/0", json=payload)
                     else:
-                        payload={
-                            'attacker' : flow[0],
-                            'victim' :  flow[1]
-                        }
                         features = requests.post(url="http://localhost:10000/digests/removedrop/0", json=payload)    
 
                 

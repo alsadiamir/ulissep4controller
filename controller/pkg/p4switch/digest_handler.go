@@ -12,6 +12,7 @@ import (
 type Flow struct {
 	Attacker net.IP `json:"attacker"`
 	Victim net.IP `json:"victim"`
+	DDoS float64 `json:"ddos"`
 }
 
 func (flow *Flow) GetAttacker() net.IP {
@@ -89,6 +90,15 @@ type digestL_t struct {
         swap int
 }
 
+func contains(flow Flow, dropped_flows []Flow) bool {
+    for _, f := range dropped_flows {
+        if f.GetAttacker().Equal(flow.GetAttacker()) && f.GetVictim().Equal(flow.GetVictim()) {
+            return true
+        }
+    }
+    return false
+}
+
 func (sw *GrpcSwitch) pruneDigests() {
 	var size = len(sw.digests)
 	if size > 0 {
@@ -116,13 +126,17 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 			//sw.log.Debugf("FLOW SUSPECT NOTIFICATION swap=%d", digestStruct.swap)
 			if(digestStruct.swap == 0){
 				sw.log.Debugf("FLOW SUSPECT %s -> %s", digestStruct.srcAddr, digestStruct.dstAddr)
-				sw.suspect_flows=append(sw.suspect_flows,Flow{
-					digestStruct.srcAddr,
-					digestStruct.dstAddr,
-				})
+				flow := Flow{
+						Attacker: digestStruct.srcAddr,
+						Victim: digestStruct.dstAddr,
+						DDoS : 0,
+					}
+				if contains(flow, sw.suspect_flows) == false {
+					sw.suspect_flows=append(sw.suspect_flows,flow)
+				}	
 			}else{
 				changeConfig(sw.ctx,sw,sw.configNameAlt)
-				sw.suspect_flows = []Flow{}	
+				//sw.suspect_flows = []Flow{}	
 			}
 		}
 		if mode == 1 && sw.GetConf() == 1{	//alt
@@ -133,8 +147,9 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 				if(digestStruct.ingress_timestamp == 0){
 					sw.log.Debugf("FLOW SUSPECT %s -> %s", digestStruct.src_ip, digestStruct.dst_ip)
 					sw.suspect_flows=append(sw.suspect_flows,Flow{
-						digestStruct.src_ip,
-						digestStruct.dst_ip,
+						Attacker: digestStruct.src_ip,
+						Victim: digestStruct.dst_ip,
+						DDoS : 0,
 					})
 				} else {
 					sw.digests=append(sw.digests, Digest{
@@ -157,6 +172,7 @@ func (sw *GrpcSwitch) handleDigest(digestList *p4_v1.DigestList) {
 			}else{	
 				changeConfig(sw.ctx,sw,sw.configName)
 				sw.digests = []Digest{}
+				sw.suspect_flows = []Flow{}
 			}
 		}
 	}
