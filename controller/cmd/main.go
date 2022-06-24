@@ -153,6 +153,9 @@ func UpdateDDoSLUCID(w http.ResponseWriter, r *http.Request) {
     if contains(flow, switch_list[i].GetFlows()) == true {
     	switch_list[i].UpdateSuspectFlow(flow)
     } 
+    if contains(flow, switch_list[i].GetDroppedFlows()) == true {
+    	switch_list[i].UpdateDroppedFlow(flow)
+    }
 
     json.NewEncoder(w).Encode(flow)
 }

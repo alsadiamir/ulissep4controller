@@ -101,6 +101,18 @@ func (sw *GrpcSwitch) UpdateSuspectFlow(flow Flow) {
 	sw.suspect_flows = suspect_flows
 }
 
+func (sw *GrpcSwitch) UpdateDroppedFlow(flow Flow) {
+	dropped_flows := []Flow{}
+	for _,f := range sw.dropped_flows{
+		if f.GetAttacker().Equal(flow.GetAttacker()) && f.GetVictim().Equal(flow.GetVictim()) {
+            dropped_flows = append(dropped_flows,flow)
+        } else{
+        	dropped_flows = append(dropped_flows,f)
+        }
+	}
+	sw.dropped_flows = dropped_flows
+}
+
 func (sw *GrpcSwitch) GetDroppedFlows() []Flow{
 	return sw.dropped_flows
 }
