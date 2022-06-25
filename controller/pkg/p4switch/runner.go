@@ -31,9 +31,7 @@ func CreateSwitch(deviceID uint64, configName string, ports int, certFile string
 }
 
 func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
-	ctx, cancel := context.WithCancel(ct)
-	sw.ctx = ctx
-	sw.cancel = cancel
+
 	sw.log.Infof("Connecting to server at %s", sw.addr)
 	var creds credentials.TransportCredentials
 	if sw.certFile != "" {
@@ -48,10 +46,13 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	if err != nil {
 		return err
 	}
+	// create context
+	ctx, cancel := context.WithCancel(ct)
 	// checking runtime
 	c := p4_v1.NewP4RuntimeClient(conn)
-	resp, err := c.Capabilities(sw.ctx, &p4_v1.CapabilitiesRequest{})
+	resp, err := c.Capabilities(ctx, &p4_v1.CapabilitiesRequest{})
 	if err != nil {
+		cancel()
 		return err
 	}
 	sw.log.Debugf("Connected, runtime version: %s", resp.P4RuntimeApiVersion)
@@ -67,19 +68,21 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 			log.Trace("we are the primary client")
 			break
 		} else {
+			cancel()
 			return fmt.Errorf("we are not the primary client")
 		}
 	}
 	// set pipeline config
 	time.Sleep(defaultWait)
 	if _, err := sw.p4RtC.SetFwdPipeFromBytes(sw.readBin(), sw.readP4Info(), 0); err != nil {
+		cancel()
 		return err
 	}
 	sw.log.Debug("Setted forwarding pipe")
 	//
 	sw.errCh = make(chan error, 1)
 	go sw.handleStreamMessages()
-	go sw.startRunner()
+	go sw.startRunner(ctx, cancel)
 	//
 	sw.addRules()
 	sw.EnableDigest()
@@ -88,18 +91,18 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	return nil
 }
 
-func (sw *GrpcSwitch) startRunner() {
+func (sw *GrpcSwitch) startRunner(ctx context.Context, cancel context.CancelFunc) {
 	defer func() {
 		close(sw.messageCh)
-		sw.cancel()
+		cancel()
 		sw.log.Info("Stopping")
 	}()
 	for {
 		select {
 		case err := <-sw.errCh:
 			sw.log.Errorf("%v", err)
-			sw.cancel()
-		case <-sw.ctx.Done():
+			cancel()
+		case <-ctx.Done():
 			return
 		}
 	}

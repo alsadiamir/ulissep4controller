@@ -1,7 +1,6 @@
 package p4switch
 
 import (
-	"context"
 	"controller/pkg/client"
 	"strconv"
 
@@ -16,8 +15,6 @@ type GrpcSwitch struct {
 	addr       string
 	log        *log.Entry
 	errCh      chan error
-	ctx        context.Context
-	cancel     context.CancelFunc
 	certFile   string
 	p4RtC      *client.Client
 	messageCh  chan *p4_v1.StreamMessageResponse
